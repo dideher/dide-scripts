@@ -1,0 +1,21 @@
+{
+   "publish":true,
+   "protocolNumber":"1",
+   "subject":"ΠΡΟΣΛΗΨΗ ΑΝΑΠΛΗΡΩΤΗ ...",
+   "issueDate":"2020-01-01T0:00:00.000Z",
+   "organizationId":"10599",
+   "signerIds":[
+      "10911"
+   ],
+   "unitIds":[
+      "10602"
+   ],
+   "decisionTypeId":"Γ.3.4",
+   "thematicCategoryIds":[
+      "20"
+   ],
+   "extraFieldValues":{
+      "contractType":"Σύμβαση Ιδιωτικού Δικαίου Ορισμένου Χρόνου",
+      "financedProject":true
+   }
+}

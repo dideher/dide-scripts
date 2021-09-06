@@ -1,0 +1,5 @@
+{
+    "login"     : "User",
+    "password"	: "Password",
+    "jsonFile"	: "./json/DDEmetadata.json"
+}
