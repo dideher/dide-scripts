@@ -26,33 +26,21 @@ class GUI():
         self.inputFilename.set(fName)
 
         self.data = self.parseCsvData(fName)
-        self.data = self.cleanQuotes(self.data)
         self.btnRun.configure(state='normal')
 
     def parseCsvData(self, inputFile):
         data = list()
 
-        with open(inputFile, 'rt', encoding='utf8') as f:
-            reader = csv.reader(f)
+        with open(inputFile, 'rt', encoding='utf-8-sig') as f:
+            dialect = csv.Sniffer().sniff(f.read(1024))
+            f.seek(0)
+
+            reader = csv.reader(f, delimiter=dialect.delimiter, quotechar=dialect.quotechar)
 
             for row in reader:
                 data.append(row)
 
         return data
-
-    def cleanQuotes(self, data):
-        cleanData = list()
-
-        for entry in data:
-            cleanEntry = list()
-
-            for item in entry:
-                cleanItem = item.replace("'", "")
-                cleanEntry.append(cleanItem)
-
-            cleanData.append(cleanEntry)
-
-        return cleanData
 
     def saveFile(self, data, outputFile):
         wb = Workbook()

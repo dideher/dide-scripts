@@ -9,59 +9,6 @@ import csv
 
 class GUI():
     def __init__(self):
-        self.schoolsOfInterestInCsv = [
-            "10ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "11ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "13ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "1ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "2ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟ",
-            "3ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "4ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "5ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "6ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "7ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "8ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΓΑΖΙΟΥ ΗΡΑΚΛΕΙΟ ΚΡΗΤΗΣ - ΔΟΜΗΝΙΚΟΣ ΘΕΟΤΟΚΟΠΟΥΛΟΣ",
-            "ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΝΕΑΣ ΑΛΙΚΑΡΝΑΣΣΟΥ"
-        ]
-
-        self.schoolsOfInterestInXlsx = [
-            "10ο ΓΕΛ",
-            "11ο ΓΕΛ",
-            "13ο ΓΕΛ",
-            "1ο ΓΕΛ",
-            "2ο ΓΕΛ",
-            "3ο ΓΕΛ",
-            "4ο ΓΕΛ",
-            "5ο ΓΕΛ",
-            "6ο ΓΕΛ",
-            "7ο ΓΕΛ",
-            "8ο ΓΕΛ",
-            "ΓΕΛ ΓΑΖΙΟΥ",
-            "ΓΕΛ ΝΕΑΣ ΑΛΙΚΑΡΝΑΣΣΟΥ"
-        ]
-
-        self.shortToFullLectic = {
-            "10ο ΓΕΛ": "10ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "11ο ΓΕΛ": "11ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "13ο ΓΕΛ": "13ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "1ο ΓΕΛ": "1ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "2ο ΓΕΛ": "2ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟ",
-            "3ο ΓΕΛ": "3ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "4ο ΓΕΛ": "4ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "5ο ΓΕΛ": "5ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "6ο ΓΕΛ": "6ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "7ο ΓΕΛ": "7ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "8ο ΓΕΛ": "8ο ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΗΡΑΚΛΕΙΟΥ",
-            "ΓΕΛ ΓΑΖΙΟΥ": "ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΓΑΖΙΟΥ ΗΡΑΚΛΕΙΟ ΚΡΗΤΗΣ - ΔΟΜΗΝΙΚΟΣ ΘΕΟΤΟΚΟΠΟΥΛΟΣ",
-            "ΓΕΛ ΝΕΑΣ ΑΛΙΚΑΡΝΑΣΣΟΥ": "ΗΜΕΡΗΣΙΟ ΓΕΝΙΚΟ ΛΥΚΕΙΟ ΝΕΑΣ ΑΛΙΚΑΡΝΑΣΣΟΥ"
-        }
-
-        self.gymsToIgnore = [
-            'ΗΜΕΡΗΣΙΟ ΓΥΜΝΑΣΙΟ ΤΥΛΙΣΟΥ "ΙΩΑΝΝΗΣ ΠΕΡΔΙΚΑΡΗΣ"',
-            'ΗΜΕΡΗΣΙΟ ΓΥΜΝΑΣΙΟ ΝΕΑΣ ΑΛΙΚΑΡΝΑΣΣΟΥ',
-            'ΗΜΕΡΗΣΙΟ ΓΥΜΝΑΣΙΟ ΠΡΟΦΗΤΗ ΗΛΙΑ ΗΡΑΚΛΕΙΟΥ'
-        ]
         self.window = Tk()
 
         self.window.title("Επαλήθευση καταχωρίσεων Λυκείων πόλης στο e-eggrafes")
@@ -79,7 +26,6 @@ class GUI():
         self.csvFilename.set(fName)
 
         self.csvData = self.parseCsvData(fName)
-        self.csvData = self.cleanQuotes(self.csvData)
         self.ntrXlsxFilename.configure(state='readonly')
         self.btnOpenXlsxFile.configure(state='normal')
 
@@ -94,6 +40,20 @@ class GUI():
         self.xlsxFilename.set(fName)
 
         self.xlsxData = self.parseXlsxData(fName)
+        self.ntrShort2FullNameFile.configure(state='readonly')
+        self.btnOpenShort2FullNameFile.configure(state='normal')
+
+    def getShort2FullNameFile(self):
+        fName = filedialog.askopenfilename(initialdir=".", title="Επιλέξτε το αρχείο xlsx",
+                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
+
+        if fName == "":
+            return
+
+        self.btnOpenShort2FullNameFile.configure(state='disabled')
+        self.short2fullNameFilename.set(fName)
+
+        self.short2fullNameData = self.parseXlsxData(fName)
         self.btnRun.configure(state='normal')
 
     def parseXlsxData(self, fileName):
@@ -109,12 +69,9 @@ class GUI():
                     entry.append("")
                 else:
                     text1 = (
-                        str(cell.value).upper().replace(".", ". ").replace(" .", ". ").replace("Ά", "Α").replace(
-                            "Έ", "Ε")
-                            .replace("Ή", "Η").replace("Ί", "Ι").replace("Ϊ́", "Ϊ").replace("Ύ", "Υ").replace(
-                            "Ϋ́",
-                            "Ϋ")
-                            .replace("Ό", "Ο").replace("Ώ", "Ω").strip())
+                        str(cell.value).upper().replace(".", ". ").replace(" .", ". ").replace("Ά", "Α").
+                            replace("Έ", "Ε").replace("Ή", "Η").replace("Ί", "Ι").replace("Ϊ́", "Ϊ").replace("Ύ", "Υ").
+                            replace("Ϋ́", "Ϋ").replace("Ό", "Ο").replace("Ώ", "Ω").strip())
 
                     text2 = re.sub(r'([ ]+)', r' ', text1)
                     entry.append(re.sub(r'([0-9]+)Ο', r'\1ο', text2))
@@ -126,92 +83,30 @@ class GUI():
     def parseCsvData(self, inputFile):
         data = list()
 
-        with open(inputFile, 'rt', encoding='utf8') as f:
-            reader = csv.reader(f)
+        with open(inputFile, 'rt', encoding='utf-8-sig') as f:
+            reader = csv.reader(f, quotechar="'")
 
             for row in reader:
                 data.append(row)
 
         return data[1:]
 
-    def cleanQuotes(self, data):
-        cleanData = list()
-
-        for entry in data:
-            cleanEntry = list()
-
-            for i, item in enumerate(entry):
-                cleanItem = item.replace("'", "")
-
-                if i == 0:
-                    am_aa = cleanItem.split("/")
-                    cleanEntry.append(am_aa[0].strip())
-                    cleanEntry.append(am_aa[1].strip())
-                else:
-                    cleanEntry.append(cleanItem)
-
-            cleanData.append(cleanEntry)
-
-        return cleanData
-
-    def filterList(self, data, index, itemsOfInterest):
-        filterData = list()
-
-        for entry in data:
-            if entry[index] in itemsOfInterest:
-                filterData.append(entry)
-
-        return filterData
-
-    def exludeList(self, data, index, itemsOfInterest):
-        filterData = list()
-
-        for entry in data:
-            if entry[index] in itemsOfInterest:
-                continue
-            filterData.append(entry)
-
-        return filterData
-
-    def saveFile(self, data, outputFile):
-        wb = Workbook()
-        ws = wb.active
-
-        for entry in data:
-            ws.append(entry)
-
-        column_widths = []
-        for row in ws.iter_rows():
-            for i, cell in enumerate(row):
-                try:
-                    column_widths[i] = max(column_widths[i], len(str(cell.value)))
-                except IndexError:
-                    column_widths.append(len(str(cell.value)))
-
-        for i, column_width in enumerate(column_widths):
-            ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
-
-        notSaved = True
-
-        while notSaved:
-            try:
-                wb.save(outputFile)
-            except:
-                showwarning(title="Αρχείο σε χρήση...",
-                            message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση.".format(
-                                outputFile))
-            else:
-                notSaved = False
-
     def check(self):
         notFoundErrors = ''
 
-        for csvEntry in self.csvFiltered:
+        shortToFullLectic = { entry[0] : entry[1] for entry in self.short2fullNameData}
+
+        for csvEntry in self.csvData:
             found = False
-            for xlsxEntry in self.xlsxFiltered:
-                if csvEntry[1] == xlsxEntry[1]:
+            for xlsxEntry in self.xlsxData:
+                if csvEntry[0] == xlsxEntry[0]:
                     found = True
-                    if csvEntry[6] != self.shortToFullLectic[xlsxEntry[6]]:
+                    if csvEntry[5] == 'Μουσικό Σχολείο ΗρακλείουΓυμνάσιο με Λυκειακές Τάξεις':
+                        csvEntry[5] = 'ΜΟΥΣΙΚΟ ΣΧΟΛΕΙΟ ΗΡΑΚΛΕΙΟΥΓΥΜΝΑΣΙΟ ΜΕ ΛΥΚΕΙΑΚΕΣ ΤΑΞΕΙΣ'
+
+                    if xlsxEntry[-1] not in shortToFullLectic:
+                        print(f'Ασυμφωνία: E-eggrafes {csvEntry} <--> Κατανομή {xlsxEntry}')
+                    elif csvEntry[5] != shortToFullLectic[xlsxEntry[-1]]:
                         print(f'Ασυμφωνία: E-eggrafes {csvEntry} <--> Κατανομή {xlsxEntry}')
                     break
 
@@ -219,14 +114,12 @@ class GUI():
                 notFoundErrors += f'Δεν βρέθηκε: {csvEntry}\n'
 
         if notFoundErrors != '':
+            print(32 * '-', ' Δεν βρέθηκαν ', 32 * '-')
             print(notFoundErrors)
 
     def run(self):
         self.btnRun.configure(state='disabled')
 
-        self.csvFiltered = self.exludeList(self.csvData, 5, self.gymsToIgnore)
-        self.csvFiltered = self.filterList(self.csvFiltered, 6, self.schoolsOfInterestInCsv)
-        self.xlsxFiltered = self.filterList(self.xlsxData, 6, self.schoolsOfInterestInXlsx)
         self.check()
 
         showinfo(title='Ολοκλήρωση Εκτέλεσης',
@@ -257,6 +150,20 @@ class GUI():
         self.btnOpenXlsxFile = Button(self.fData, text="Επιλέξτε αρχείο...", state='disabled',
                                       command=self.getXlsxFilename)
         self.btnOpenXlsxFile.grid(column=2, row=1, padx=10, pady=10)
+
+        self.lShort2FullNameFile = Label(self.fData,
+                                         text="Αρχείο αντιστοίχισης σύντομου σε πλήρες\nονόματος σχολείου (xlsx):")
+        self.lShort2FullNameFile.grid(column=0, row=2, padx=10, pady=10, sticky=E)
+
+        self.short2fullNameFilename = StringVar()
+        self.short2fullNameFilename.set('')
+        self.ntrShort2FullNameFile = Entry(self.fData, width=128, state='disabled',
+                                           textvariable=self.short2fullNameFilename)
+        self.ntrShort2FullNameFile.grid(column=1, row=2, padx=10, pady=10, sticky=W)
+
+        self.btnOpenShort2FullNameFile = Button(self.fData, text="Επιλέξτε αρχείο...", state='disabled',
+                                                command=self.getShort2FullNameFile)
+        self.btnOpenShort2FullNameFile.grid(column=2, row=2, padx=10, pady=10)
 
         self.btnRun = Button(self.fData, text="Εκτέλεση", command=self.run, state='disabled')
         self.btnRun.grid(column=1, row=10, padx=10, pady=10)

@@ -7,32 +7,6 @@ from openpyxl import *
 from openpyxl.utils import get_column_letter
 
 
-'''
-Α/Α	                        0
-ΕΠΩΝΥΜΟ ΜΑΘΗΤΗ	            1
-ΟΝΟΜΑ ΜΑΘΗΤΗ	            2
-ΟΝΟΜΑ ΠΑΤΕΡΑ	            3
-ΔΙΕΥΘΥΝΣΗ, ΟΔΟΣ - ΑΡΙΘΜΟΣ	4
-ΔΙΕΥΘΥΝΣΗ, Τ. Κ.	        5
-ΔΙΕΥΘΥΝΣΗ, ΠΕΡΙΟΧΗ	        6
-ADDRESS	                    7  --> 3
-ΣΧΟΛΕΙΟ	                    8
-Σχολείο (Google Maps)	    9  --> 5
-Διεύθυνση (Google Maps)	    10
-Συντεταγμένες (Google Maps)	11
-Σχολείο (Google V3)	        12
-Διεύθυνση (Google V3)	    13
-Συντεταγμένες (Google V3)	14
-Σχολείο (Bing Maps)	        15
-Διεύθυνση (Bing Maps)	    16
-Συντεταγμένες (Bing Maps)	17
-Σχολείο (Here Maps)	        18
-Διεύθυνση (Here Maps)	    19
-Συντεταγμένες (Here Maps)	20
-'''
-
-OFFSET = -4
-
 class GUI():
     def __init__(self):
         self.window = Tk()
@@ -40,7 +14,6 @@ class GUI():
         self.window.title("Διασταύρωση των διευθύνσεων των μαθητών")
         self.window.resizable(False, False)
         self.create_widgets()
-
 
     def getFilename(self):
         fName = filedialog.askopenfilename(initialdir=".", title="Επιλέξτε το αρχείο των μαθητών",
@@ -58,9 +31,9 @@ class GUI():
         self.data[0].append("Διεύθυνση Κατανομής")
         self.data[0].append("Συντεταγμένες Κατανομής")
         self.currentStudent = 0
-        self.entriesCount.set(len(self.students) - 1)
-        self.loadStudent()
-
+        self.cbStudentAddressCol['values'] = self.students[0]
+        self.cbGoogleAddressCol['values'] = self.students[0]
+        self.cbStudentAddressCol.configure(state='normal')
 
     def loadStudent(self):
         self.currentStudent += 1
@@ -68,17 +41,18 @@ class GUI():
         if cs < len(self.students):
             self.data.append(self.students[cs].copy())
             self.entryNum.set(cs)
-            self.studentAddress.set(self.students[cs][7 + OFFSET])
-            self.gmAddress.set(self.students[cs][10 + OFFSET])
-            self.gmSchool.set(self.students[cs][9 + OFFSET])
-            self.gv3Address.set(self.students[cs][13 + OFFSET])
-            self.gv3School.set(self.students[cs][12 + OFFSET])
-            self.bmAddress.set(self.students[cs][16 + OFFSET])
-            self.bmSchool.set(self.students[cs][15 + OFFSET])
-            self.hmAddress.set(self.students[cs][19 + OFFSET])
-            self.hmSchool.set(self.students[cs][18 + OFFSET])
+            self.studentAddress.set(self.students[cs][self.sac])
+            self.gmSchool.set(self.students[cs][self.gac - 1])
+            self.gmAddress.set(self.students[cs][self.gac + 0])
+            self.gv3School.set(self.students[cs][self.gac + 2])
+            self.gv3Address.set(self.students[cs][self.gac + 3])
+            self.bmSchool.set(self.students[cs][self.gac + 5])
+            self.bmAddress.set(self.students[cs][self.gac + 6])
+            self.hmSchool.set(self.students[cs][self.gac + 8])
+            self.hmAddress.set(self.students[cs][self.gac + 9])
         else:
-            showinfo(title="Ολοκλήρωση διασταύρωσης", message="Η διαδικασία της διασταύρωσης των διευθύνσεων ολοκληρώθηκε.")
+            showinfo(title="Ολοκλήρωση διασταύρωσης",
+                     message="Η διαδικασία της διασταύρωσης των διευθύνσεων ολοκληρώθηκε.")
             self.entryNum.set("")
             self.entriesCount.set("")
             self.studentAddress.set("")
@@ -98,7 +72,6 @@ class GUI():
             self.btnAddressNotFound.configure(state='disabled')
             self.saveFile(excludeLast=False)
 
-
     def addressNotFound(self):
         cs = self.currentStudent
         self.data[cs].append("N/A")
@@ -107,42 +80,37 @@ class GUI():
 
         self.loadStudent()
 
-
     def gmAccept(self):
         cs = self.currentStudent
-        self.data[cs].append(self.students[cs][9 + OFFSET])
-        self.data[cs].append(self.students[cs][10 + OFFSET])
-        self.data[cs].append(self.students[cs][11 + OFFSET])
+        self.data[cs].append(self.students[cs][self.gac - 1])
+        self.data[cs].append(self.students[cs][self.gac + 0])
+        self.data[cs].append(self.students[cs][self.gac + 1])
 
         self.loadStudent()
-
 
     def gv3Accept(self):
         cs = self.currentStudent
-        self.data[cs].append(self.students[cs][12 + OFFSET])
-        self.data[cs].append(self.students[cs][13 + OFFSET])
-        self.data[cs].append(self.students[cs][14 + OFFSET])
+        self.data[cs].append(self.students[cs][self.gac + 2])
+        self.data[cs].append(self.students[cs][self.gac + 3])
+        self.data[cs].append(self.students[cs][self.gac + 4])
 
         self.loadStudent()
-
 
     def bmAccept(self):
         cs = self.currentStudent
-        self.data[cs].append(self.students[cs][15 + OFFSET])
-        self.data[cs].append(self.students[cs][16 + OFFSET])
-        self.data[cs].append(self.students[cs][17 + OFFSET])
+        self.data[cs].append(self.students[cs][self.gac + 5])
+        self.data[cs].append(self.students[cs][self.gac + 6])
+        self.data[cs].append(self.students[cs][self.gac + 7])
 
         self.loadStudent()
-
 
     def hmAccept(self):
         cs = self.currentStudent
-        self.data[cs].append(self.students[cs][18 + OFFSET])
-        self.data[cs].append(self.students[cs][19 + OFFSET])
-        self.data[cs].append(self.students[cs][20 + OFFSET])
+        self.data[cs].append(self.students[cs][self.gac + 8])
+        self.data[cs].append(self.students[cs][self.gac + 9])
+        self.data[cs].append(self.students[cs][self.gac + 10])
 
         self.loadStudent()
-
 
     def saveFile(self, excludeLast=True):
         wb = Workbook()
@@ -168,7 +136,7 @@ class GUI():
 
         outputFile = self.studentsFilename.get().replace(".xlsx", "_output.xlsx")
         showinfo(title="Αρχείο εξόδου",
-                    message="Η κατανομή θα αποθηκευτεί στο αρχείο: " + outputFile)
+                 message="Η κατανομή θα αποθηκευτεί στο αρχείο: " + outputFile)
 
         notSaved = True
 
@@ -176,10 +144,23 @@ class GUI():
             try:
                 wb.save(outputFile)
             except:
-                showwarning(title="Αρχείο σε χρήση...", message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση της νέας κατανομής.".format(outputFile))
+                showwarning(title="Αρχείο σε χρήση...",
+                            message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση της νέας κατανομής.".format(
+                                outputFile))
             else:
                 notSaved = False
 
+    def cbStudentAddressColSelect(self, eventObject):
+        self.cbGoogleAddressCol.configure(state='normal')
+        self.cbStudentAddressCol.configure(state='disabled')
+
+    def cbGoogleAddressColSelect(self, eventObject):
+        self.cbGoogleAddressCol.configure(state='disabled')
+        self.entriesCount.set(len(self.students) - 1)
+        self.sac = self.cbStudentAddressCol.current()
+        self.gac = self.cbGoogleAddressCol.current()
+
+        self.loadStudent()
 
     def create_widgets(self):
         self.fMain = Frame(self.window)
@@ -195,8 +176,24 @@ class GUI():
         self.btnOpenFile = Button(self.fMain, text="Επιλέξτε αρχείο...", command=self.getFilename)
         self.btnOpenFile.grid(column=2, row=0, padx=10, pady=10)
 
+        self.lStudentAddressCol = Label(self.fMain, text="Στήλη για διεύθυνση μαθητή:")
+        self.lStudentAddressCol.grid(column=0, row=1, padx=10, pady=10, sticky=E)
+
+        self.studentAddressCol = StringVar()
+        self.cbStudentAddressCol = Combobox(self.fMain, width=40, textvariable=self.studentAddressCol, state='disabled')
+        self.cbStudentAddressCol.bind("<<ComboboxSelected>>", self.cbStudentAddressColSelect)
+        self.cbStudentAddressCol.grid(column=1, row=1, padx=10, pady=10, sticky='NSEW')
+
+        self.lGoogleAddressCol = Label(self.fMain, text="Στήλη για διεύθυνση Google:")
+        self.lGoogleAddressCol.grid(column=0, row=2, padx=10, pady=10, sticky=E)
+
+        self.googleAddressCol = StringVar()
+        self.cbGoogleAddressCol = Combobox(self.fMain, width=40, textvariable=self.googleAddressCol, state='disabled')
+        self.cbGoogleAddressCol.bind("<<ComboboxSelected>>", self.cbGoogleAddressColSelect)
+        self.cbGoogleAddressCol.grid(column=1, row=2, padx=10, pady=10, sticky='NSEW')
+
         self.lfFileInfo = LabelFrame(self.fMain, text="Πληροφορίες αρχείου")
-        self.lfFileInfo.grid(column=0, row=1, columnspan=3, padx=10, pady=10)
+        self.lfFileInfo.grid(column=0, row=3, columnspan=3, padx=10, pady=10)
         self.lEntryNum = Label(self.lfFileInfo, text="Α/Α:")
         self.lEntryNum.grid(column=0, row=0, padx=10, pady=5, sticky=E)
         self.entryNum = StringVar()
@@ -211,13 +208,14 @@ class GUI():
         self.btnSaveFile.grid(column=4, row=0, padx=10, pady=10)
 
         self.lfStudentInfo = LabelFrame(self.fMain, text="Διεύθυνση μαθητή")
-        self.lfStudentInfo.grid(column=0, row=2, columnspan=3, padx=10, pady=10, sticky=EW)
+        self.lfStudentInfo.grid(column=0, row=4, columnspan=3, padx=10, pady=10, sticky=EW)
         self.studentAddress = StringVar()
-        self.ntrStudentAddress = Entry(self.lfStudentInfo, width=160, state='readonly', textvariable=self.studentAddress)
+        self.ntrStudentAddress = Entry(self.lfStudentInfo, width=160, state='readonly',
+                                       textvariable=self.studentAddress)
         self.ntrStudentAddress.grid(column=0, row=0, padx=10, pady=5)
 
         self.lfGecodingInfo = LabelFrame(self.fMain, text="Διεύθυνση / κατανομή")
-        self.lfGecodingInfo.grid(column=0, row=3, columnspan=3, padx=10, pady=10, sticky=EW)
+        self.lfGecodingInfo.grid(column=0, row=5, columnspan=3, padx=10, pady=10, sticky=EW)
 
         self.gmAddress = StringVar()
         self.ntrGMAddress = Entry(self.lfGecodingInfo, width=100, state='readonly', textvariable=self.gmAddress)
@@ -256,7 +254,7 @@ class GUI():
         self.btnHMAccept.grid(column=2, row=3, padx=10, pady=5)
 
         self.btnAddressNotFound = Button(self.fMain, text="Η διεύθυνση δεν βρέθηκε", command=self.addressNotFound)
-        self.btnAddressNotFound.grid(column=0, row=4, columnspan=3, padx=10, pady=5, sticky=EW)
+        self.btnAddressNotFound.grid(column=0, row=6, columnspan=3, padx=10, pady=5, sticky=EW)
 
         self.fMain.pack()
 
