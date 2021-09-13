@@ -31,14 +31,24 @@ class GUI():
     def parseCsvData(self, inputFile):
         data = list()
 
-        with open(inputFile, 'rt', encoding='utf-8-sig') as f:
-            dialect = csv.Sniffer().sniff(f.read(1024))
-            f.seek(0)
+        try:
+            with open(inputFile, 'rt', encoding='utf-8-sig') as f:
+                dialect = csv.Sniffer().sniff(f.readline())
+                f.seek(0)
 
-            reader = csv.reader(f, delimiter=dialect.delimiter, quotechar=dialect.quotechar)
+                reader = csv.reader(f, delimiter=dialect.delimiter, quotechar=dialect.quotechar)
 
-            for row in reader:
-                data.append(row)
+                for row in reader:
+                    data.append(row)
+        except:
+            with open(inputFile, 'rt') as f:
+                dialect = csv.Sniffer().sniff(f.readline())
+                f.seek(0)
+
+                reader = csv.reader(f, delimiter=dialect.delimiter, quotechar=dialect.quotechar)
+
+                for row in reader:
+                    data.append(row)
 
         return data
 
