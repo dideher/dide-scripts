@@ -27,7 +27,7 @@ class GUI():
         for row in sheet.iter_rows():
             entry = list()
             for i, cell in enumerate(row):
-                if i > 4:
+                if i > 5:
                     break
 
                 if cell.value is None:
@@ -85,12 +85,14 @@ class GUI():
         header = list()
         header.append('Σχολείο')
         header += self.miscSpcTypes[:]
+        header.append('Παρατηρήσεις')
 
         self.msTable.append(header)
         for sch in self.miscSchools:
             entry = list()
             entry.append(sch)
             sch_values = [0] * len(self.miscSpcTypes)
+            description = ""
 
             for item in self.xlsxData[1:]:
                 if item[0] != sch:
@@ -109,7 +111,11 @@ class GUI():
                 else:
                     sch_values[indexScpType] += int(item[4])
 
+                if item[5] != "":
+                    description += f'[{item[1]}] {item[5]}\n'
+
             entry += sch_values
+            entry.append(description)
 
             self.msTable.append(entry)
 
@@ -118,12 +124,14 @@ class GUI():
         header = list()
         header.append('Σχολείο')
         header += self.specialEducationSpcTypes[:]
+        header.append('Παρατηρήσεις')
 
         self.sesTable.append(header)
         for sch in self.specialEducationSchools:
             entry = list()
             entry.append(sch)
             sch_values = [0] * len(self.specialEducationSpcTypes)
+            description = ""
 
             for item in self.xlsxData[1:]:
                 if item[0] != sch:
@@ -140,7 +148,11 @@ class GUI():
                 else:
                     continue
 
+                if item[5] != "":
+                    description += f'[{item[1]}] {item[5]}\n'
+
             entry += sch_values
+            entry.append(description)
 
             self.sesTable.append(entry)
 
@@ -149,12 +161,14 @@ class GUI():
         header = list()
         header.append('Σχολείο')
         header += self.generalEducationSpcTypes[:]
+        header.append('Παρατηρήσεις')
 
         self.gesTable.append(header)
         for sch in self.generalEducationSchools:
             entry = list()
             entry.append(sch)
             sch_values = [0] * len(self.generalEducationSpcTypes)
+            description = ""
 
             for item in self.xlsxData[1:]:
                 if item[0] != sch:
@@ -180,7 +194,11 @@ class GUI():
                     else:
                         sch_values[indexScpType] += int(item[4])
 
+                if item[5] != "":
+                    description += f'[{item[1]}] {item[5]}\n'
+
             entry += sch_values
+            entry.append(description)
 
             self.gesTable.append(entry)
 
