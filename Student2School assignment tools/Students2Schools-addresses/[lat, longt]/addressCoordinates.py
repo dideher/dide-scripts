@@ -5,8 +5,6 @@ import googlemaps
 
 
 def searchAddressInGoogleMaps(myKey, searchItem):
-    #myKey = "AIzaSyDMyYJsLLux0bnLYkQVfhLnk-xw_3KoLas"
-
     try:
         gmaps = googlemaps.Client(key=myKey)
 
@@ -26,8 +24,6 @@ def searchAddressInGoogleMaps(myKey, searchItem):
 
 
 def searchAddressInGoogleV3(myKey, searchItem):
-    #myKey = "AIzaSyDMyYJsLLux0bnLYkQVfhLnk-xw_3KoLas"
-
     try:
         g = GoogleV3(api_key=myKey, timeout=1000)
         result = g.geocode(searchItem, exactly_one=True, language="el")
@@ -45,8 +41,6 @@ def searchAddressInGoogleV3(myKey, searchItem):
 
 
 def searchAddressInBingMaps(myKey, searchItem):
-    #myKey = "Am4j-SOhvFPDouuTWXKCuf9sFXcqFFrqoJI33cuos-1UIn8hZRPffRcUeCSLUjDg"
-
     try:
         result = geocoder.bing(searchItem, adminDistrict='Heraklion', method='details', key=myKey)
     except:
@@ -63,8 +57,6 @@ def searchAddressInBingMaps(myKey, searchItem):
 
 
 def searchAddressInHereMaps(myKey, searchItem):
-    #myKey = "8rgIl2Poc0oPgAlqWHvbO1KwLy21IwCa-td0CWUjfuM"
-
     try:
         here = Here(apikey=myKey, timeout=1000)
         result = here.geocode(searchItem, exactly_one=True, language="el")
