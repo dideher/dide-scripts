@@ -4,7 +4,7 @@ from tkinter.ttk import *
 from tkinter.messagebox import showwarning, showinfo
 from openpyxl import *
 from openpyxl.utils import get_column_letter
-import os
+import os, re
 
 
 class GUI():
@@ -22,7 +22,6 @@ class GUI():
         self.window.resizable(False, False)
         self.create_widgets()
 
-
     def conformText(self, text):
         text1 = (text.upper().replace("Ά", "Α").replace("Έ", "Ε").replace("Ή", "Η").replace("Ί", "Ι")
                  .replace("Ϊ́", "Ϊ").replace("Ύ", "Υ").replace("Ϋ́", "Ϋ").replace("Ό", "Ο").replace("Ώ", "Ω"))
@@ -31,10 +30,8 @@ class GUI():
 
         return text2
 
-
     def is_float(self, s):
         return s.replace('.', '', 1).isdecimal()
-
 
     def parseXlsxData(self, file, data):
         workbook = load_workbook(filename=file)
@@ -55,7 +52,6 @@ class GUI():
 
             data.append(entry)
 
-
     def setColsWidth(self, ws):
         column_widths = []
         for row in ws.iter_rows():
@@ -67,7 +63,6 @@ class GUI():
 
         for i, column_width in enumerate(column_widths):
             ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
-
 
     def saveFileMatches(self):
         wb = Workbook()
@@ -87,11 +82,9 @@ class GUI():
                 wb.save(outputFile)
             except:
                 showwarning(title="Αρχείο σε χρήση...",
-                            message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση.".format(
-                                outputFile))
+                            message=f"Παρακαλώ κλείστε το αρχείο '{outputFile}' ώστε να ολοκληρωθεί η αποθήκευση.")
             else:
                 notSaved = False
-
 
     def saveFileNoMatches(self):
         wb = Workbook()
@@ -111,11 +104,9 @@ class GUI():
                 wb.save(outputFile)
             except:
                 showwarning(title="Αρχείο σε χρήση...",
-                            message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση.".format(
-                                outputFile))
+                            message=f"Παρακαλώ κλείστε το αρχείο '{outputFile}' ώστε να ολοκληρωθεί η αποθήκευση.")
             else:
                 notSaved = False
-
 
     def getOutputDirName(self):
         dName = filedialog.askdirectory(initialdir="./data/", title="Επιλέξτε τον φάκελο που θα αποθηκευτεί το αρχείο")
@@ -130,7 +121,6 @@ class GUI():
         self.cbFile2_1.configure(state='readonly')
         self.btnAddRelation2.configure(state='normal')
         self.btnRun.configure(state='normal')
-
 
     def getData1Filename(self):
         fName = filedialog.askopenfilename(initialdir="./data/",
@@ -151,7 +141,6 @@ class GUI():
         self.cbFile1_2['values'] = self.data1[0]
         self.cbFile1_3['values'] = self.data1[0]
         self.cbFile1_4['values'] = self.data1[0]
-
 
     def getData2Filename(self):
         fName = filedialog.askopenfilename(initialdir="./data/",
@@ -177,7 +166,6 @@ class GUI():
         self.cbFile2_3['values'] = self.data2[0]
         self.cbFile2_4['values'] = self.data2[0]
 
-
     def addRelation2(self):
         if (self.cbFile1_1.current() == -1 or self.cbFile2_1.current() == -1):
             showwarning(title="Προσοχή ...", message="Πρέπει να κάνετε την αντιστοίχιση πριν προσθέσετε νέα.")
@@ -189,7 +177,6 @@ class GUI():
         self.btnAddRelation3.configure(state='normal')
         self.btnRemoveRelation2.configure(state='normal')
 
-
     def removeRelation2(self):
         self.file1Selections[2 - 1] = -1
         self.file2Selections[2 - 1] = -1
@@ -200,7 +187,6 @@ class GUI():
         self.btnRemoveRelation2.configure(state='disabled')
         self.btnAddRelation3.configure(state='disabled')
         self.btnAddRelation2.configure(state='normal')
-
 
     def addRelation3(self):
         if (self.cbFile1_2.current() == -1 or self.cbFile2_2.current() == -1):
@@ -214,7 +200,6 @@ class GUI():
         self.btnAddRelation4.configure(state='normal')
         self.btnRemoveRelation3.configure(state='normal')
 
-
     def removeRelation3(self):
         self.file1Selections[3 - 1] = -1
         self.file2Selections[3 - 1] = -1
@@ -227,7 +212,6 @@ class GUI():
         self.btnAddRelation3.configure(state='normal')
         self.btnRemoveRelation2.configure(state='normal')
 
-
     def addRelation4(self):
         if (self.cbFile1_3.current() == -1 or self.cbFile2_3.current() == -1):
             showwarning(title="Προσοχή ...", message="Πρέπει να κάνετε την αντιστοίχιση πριν προσθέσετε νέα.")
@@ -238,7 +222,6 @@ class GUI():
         self.btnAddRelation4.configure(state='disabled')
         self.btnRemoveRelation3.configure(state='disabled')
         self.btnRemoveRelation4.configure(state='normal')
-
 
     def removeRelation4(self):
         self.file1Selections[4 - 1] = -1
@@ -251,7 +234,6 @@ class GUI():
         self.btnAddRelation4.configure(state='normal')
         self.btnRemoveRelation3.configure(state='normal')
 
-
     def cbFile1_1Select(self, eventObject):
         if self.cbFile1_1.current() != self.file1Selections[1 - 1] and self.cbFile1_1.current() in self.file1Selections:
             showwarning(title="Προσοχή ...", message="Έχετε ήδη μια αντιστοίχιση με αυτό το πεδίο.")
@@ -262,7 +244,6 @@ class GUI():
             return
 
         self.file1Selections[1 - 1] = self.cbFile1_1.current()
-
 
     def cbFile2_1Select(self, eventObject):
         if self.cbFile2_1.current() != self.file2Selections[1 - 1] and self.cbFile2_1.current() in self.file2Selections:
@@ -275,7 +256,6 @@ class GUI():
 
         self.file2Selections[1 - 1] = self.cbFile2_1.current()
 
-
     def cbFile1_2Select(self, eventObject):
         if self.cbFile1_2.current() != self.file1Selections[2 - 1] and self.cbFile1_2.current() in self.file1Selections:
             showwarning(title="Προσοχή ...", message="Έχετε ήδη μια αντιστοίχιση με αυτό το πεδίο.")
@@ -286,7 +266,6 @@ class GUI():
             return
 
         self.file1Selections[2 - 1] = self.cbFile1_2.current()
-
 
     def cbFile2_2Select(self, eventObject):
         if self.cbFile2_2.current() != self.file2Selections[2 - 1] and self.cbFile2_2.current() in self.file2Selections:
@@ -299,7 +278,6 @@ class GUI():
 
         self.file2Selections[2 - 1] = self.cbFile2_2.current()
 
-
     def cbFile1_3Select(self, eventObject):
         if self.cbFile1_3.current() != self.file1Selections[3 - 1] and self.cbFile1_3.current() in self.file1Selections:
             showwarning(title="Προσοχή ...", message="Έχετε ήδη μια αντιστοίχιση με αυτό το πεδίο.")
@@ -310,7 +288,6 @@ class GUI():
             return
 
         self.file1Selections[3 - 1] = self.cbFile1_3.current()
-
 
     def cbFile2_3Select(self, eventObject):
         if self.cbFile2_3.current() != self.file2Selections[3 - 1] and self.cbFile2_3.current() in self.file2Selections:
@@ -323,7 +300,6 @@ class GUI():
 
         self.file2Selections[3 - 1] = self.cbFile2_3.current()
 
-
     def cbFile1_4Select(self, eventObject):
         if self.cbFile1_4.current() != self.file1Selections[4 - 1] and self.cbFile1_4.current() in self.file1Selections:
             showwarning(title="Προσοχή ...", message="Έχετε ήδη μια αντιστοίχιση με αυτό το πεδίο.")
@@ -334,7 +310,6 @@ class GUI():
             return
 
         self.file1Selections[4 - 1] = self.cbFile1_4.current()
-
 
     def cbFile2_4Select(self, eventObject):
         if self.cbFile2_4.current() != self.file2Selections[4 - 1] and self.cbFile2_4.current() in self.file2Selections:
@@ -347,15 +322,16 @@ class GUI():
 
         self.file2Selections[4 - 1] = self.cbFile2_4.current()
 
-
     def run(self):
         if (self.file1Selections[1 - 1] == -1 or self.file2Selections[1 - 1] == -1):
             showwarning(title="Προσοχή ...", message="Πρέπει να κάνετε τουλάχιστον μια αντιστοίχιση.")
             return
         else:
             for i in range(1, 4):
-                if (self.file2Selections[i] == -1 and self.file1Selections[i] != -1) or (self.file2Selections[i] != -1 and self.file1Selections[i] == -1):
-                    showwarning(title="Προσοχή ...", message="Η {}η αντιστοίχιση δεν είναι ολοκληρωμένη. Συμπληρώστε το πεδίο ή αφαιρέσετε την.".format(i + 1))
+                if (self.file2Selections[i] == -1 and self.file1Selections[i] != -1) or (
+                        self.file2Selections[i] != -1 and self.file1Selections[i] == -1):
+                    showwarning(title="Προσοχή ...",
+                                message=f"Η {i + 1}η αντιστοίχιση δεν είναι ολοκληρωμένη. Συμπληρώστε το πεδίο ή αφαιρέσετε την.")
                     return
 
         self.cbFile1_1.configure(state='disabled')
@@ -378,21 +354,36 @@ class GUI():
         self.data3.append(self.data1[0])
         self.data4.append(self.data1[0])
 
-        for row1 in self.data1[1:]:
-            for row2 in self.data2[1:]:
-                match = True
+        selections_count = 0
+        for item in self.file1Selections:
+            if item != -1:
+                selections_count += 1
+            else:
+                break
 
-                for i in range(4):
-                    if self.file1Selections[i] != -1:
-                        if (self.conformText(row1[self.file1Selections[i]]) != self.conformText(row2[self.file2Selections[i]])):
-                            match = False
-                            break
-                    else:
+        input_list = self.data1[1:]
+
+        for i in range(selections_count):
+            output_list = list()
+            for row1 in input_list:
+                match = False
+
+                for row2 in self.data2[1:]:
+                    if row2[self.file2Selections[i]] == '':
+                        break
+
+                    if self.conformText(row1[self.file1Selections[i]]) == self.conformText(
+                            row2[self.file2Selections[i]]):
+                        match = True
                         break
 
                 if match:
-                    self.data3.append(row1)
+                    output_list.append(row1)
 
+            input_list = output_list
+            self.data3 = output_list
+
+        self.data3 = [self.data1[0]] + self.data3
         self.saveFileMatches()
 
         for item in self.data1[1:]:
@@ -403,6 +394,7 @@ class GUI():
 
         showinfo(title="Ολοκλήρωση εκτέλεσης", message="Ο διαχωρισμός ολοκληρώθηκε.")
 
+        self.window.destroy()
 
     def create_widgets(self):
         self.fData = Frame(self.window)
@@ -424,7 +416,8 @@ class GUI():
         self.ntrData2Filename = Entry(self.fData, width=128, state='disabled', textvariable=self.data2Filename)
         self.ntrData2Filename.grid(column=1, row=1, padx=10, pady=5, sticky=W)
 
-        self.btnOpenData2 = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getData2Filename, state='disabled')
+        self.btnOpenData2 = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getData2Filename,
+                                   state='disabled')
         self.btnOpenData2.grid(column=2, row=1, padx=10, pady=5)
 
         self.lOutputDirName = Label(self.fData, text="Φάκελος για αποθήκευση:")
@@ -434,7 +427,8 @@ class GUI():
         self.ntrOutputDirName = Entry(self.fData, width=128, state='disabled', textvariable=self.outputDirName)
         self.ntrOutputDirName.grid(column=1, row=2, padx=10, pady=5, sticky=W)
 
-        self.btnOpenOutputDir = Button(self.fData, text="Επιλέξτε φάκελο...", command=self.getOutputDirName, state='disabled')
+        self.btnOpenOutputDir = Button(self.fData, text="Επιλέξτε φάκελο...", command=self.getOutputDirName,
+                                       state='disabled')
         self.btnOpenOutputDir.grid(column=2, row=2, padx=10, pady=5)
 
         self.lfRelateFrame = LabelFrame(self.fData, text="Αντιστοιχίσεις")
@@ -451,7 +445,7 @@ class GUI():
 
         self.lRemove = Label(self.lfRelateFrame, text="Αφαίρεση τρέχουσας\nαντιστοίχισης", justify=CENTER)
         self.lRemove.grid(column=4, row=0, padx=10, pady=1)
-        #----------------------------------------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------------------------------------
         self.file1_1 = StringVar()
         self.cbFile1_1 = Combobox(self.lfRelateFrame, width=60, textvariable=self.file1_1, state='disabled')
         self.cbFile1_1.bind("<<ComboboxSelected>>", self.cbFile1_1Select)

@@ -4,10 +4,90 @@ from tkinter.messagebox import showwarning, showinfo
 from tkinter.ttk import *
 from openpyxl import *
 from openpyxl.utils import get_column_letter
-from parseXlsxData import *
+import re
 
 
-class GUI():
+def fix_cell(cell):
+    text1 = (str(cell.value).upper().replace(" .", ". ").replace("Ά", "Α").replace("Έ", "Ε")
+             .replace("Ή", "Η").replace("Ί", "Ι").replace("Ϊ́", "Ϊ").replace("Ύ", "Υ").replace("Ϋ́", "Ϋ")
+             .replace("Ό", "Ο").replace("Ώ", "Ω").strip())
+
+    text2 = re.sub(r'([ ]+)', r' ', text1)
+    text3 = re.sub(r'([0-9]+)Ο', r'\1ο', text2)
+
+    return text3
+
+
+def parse_students(filename):
+    wb = load_workbook(filename=filename)
+    sheet = wb.active
+
+    students = list()
+
+    for row in sheet.iter_rows():
+        student = list()
+        for cell in row:
+            if cell.value is None:
+                student.append("")
+            else:
+                text = fix_cell(cell)
+                student.append(text)
+
+        students.append(student)
+
+    return students
+
+
+def parse_schools(filename):
+    wb = load_workbook(filename=filename)
+    sheet = wb.active
+
+    schools = dict()
+
+    rows = sheet.iter_rows()
+    next(rows)
+
+    for row in rows:
+        if row[0].value is not None and row[1].value is not None:
+            origin_school = fix_cell(row[0])
+            destination_school = fix_cell(row[1])
+
+            schools[origin_school] = destination_school
+
+    return schools
+
+
+def save_file(data, output_file):
+    wb = Workbook()
+    ws = wb.active
+
+    for entry in data:
+        ws.append(entry)
+
+    column_widths = []
+    for row in ws.iter_rows():
+        for i, cell in enumerate(row):
+            try:
+                column_widths[i] = max(column_widths[i], len(str(cell.value)))
+            except IndexError:
+                column_widths.append(len(str(cell.value)))
+
+    for i, column_width in enumerate(column_widths):
+        ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
+
+    not_saved = True
+
+    while not_saved:
+        try:
+            wb.save(output_file)
+        except:
+            showwarning(title="Αρχείο σε χρήση...",
+                        message=f"Παρακαλώ κλείστε το αρχείο '{output_file}' ώστε να ολοκληρωθεί η αποθήκευση.")
+        else:
+            not_saved = False
+
+
+class GUI:
     def __init__(self):
         self.window = Tk()
 
@@ -15,70 +95,38 @@ class GUI():
         self.window.resizable(False, False)
         self.create_widgets()
 
+    def get_students_filename(self):
+        f_name = filedialog.askopenfilename(initialdir=".", title="Επιλέξτε το αρχείο των μαθητών",
+                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
 
-    def getStudentsFilename(self):
-        fName = filedialog.askopenfilename(initialdir=".", title="Επιλέξτε το αρχείο των μαθητών",
-                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
-
-        if fName == "":
+        if f_name == "":
             return
 
-        self.btnOpenStudentsFile.configure(state='disabled')
-        self.studentsFilename.set(fName)
-        self.students = parseStudents(fName)
-        self.cbSchoolCol['values'] = self.students[0]
-        self.cbSchoolCol.configure(state='readonly')
+        self.btn_get_students_file.configure(state='disabled')
+        self.students_filename.set(f_name)
+        self.students = parse_students(f_name)
+        self.cb_school_col['values'] = self.students[0]
+        self.cb_school_col.configure(state='readonly')
         self.urban = list()
         self.rural = list()
 
+    def get_schools_filename(self):
+        f_name = filedialog.askopenfilename(initialdir=".", title="Επιλέξτε το αρχείο των σχολείων",
+                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
 
-    def getSchoolsFilename(self):
-        fName = filedialog.askopenfilename(initialdir=".", title="Επιλέξτε το αρχείο των σχολείων",
-                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
-
-        if fName == "":
+        if f_name == "":
             return
 
-        self.btnOpenSchoolsFile.configure(state='disabled')
-        self.btnRun.configure(state='normal')
-        self.schoolsFilename.set(fName)
-        self.schools = parseSchools(fName)
-
-
-    def saveFile(self, data, outputFile):
-        wb = Workbook()
-        ws = wb.active
-
-        for entry in data:
-            ws.append(entry)
-
-        column_widths = []
-        for row in ws.iter_rows():
-            for i, cell in enumerate(row):
-                try:
-                    column_widths[i] = max(column_widths[i], len(str(cell.value)))
-                except IndexError:
-                    column_widths.append(len(str(cell.value)))
-
-        for i, column_width in enumerate(column_widths):
-            ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
-
-        notSaved = True
-
-        while notSaved:
-            try:
-                wb.save(outputFile)
-            except:
-                showwarning(title="Αρχείο σε χρήση...", message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση.".format(outputFile))
-            else:
-                notSaved = False
-
+        self.btn_get_schools_file.configure(state='disabled')
+        self.btn_run.configure(state='normal')
+        self.schools_filename.set(f_name)
+        self.schools = parse_schools(f_name)
 
     def run(self):
-        self.cbSchoolCol.configure(state='disabled')
-        self.btnRun.configure(state='disabled')
+        self.cb_school_col.configure(state='disabled')
+        self.btn_run.configure(state='disabled')
 
-        sc = self.cbSchoolCol.current()
+        sc = self.cb_school_col.current()
 
         self.urban.append(self.students[0])
         self.rural.append(self.students[0] + ['ΣΧΟΛΕΙΟ ΚΑΤΑΝΟΜΗΣ', ])
@@ -89,54 +137,58 @@ class GUI():
             else:
                 self.urban.append(student)
 
-        self.saveFile(self.urban, "urban.xlsx")
-        self.saveFile(self.rural, "rural.xlsx")
+        save_file(self.urban, "urban.xlsx")
+        save_file(self.rural, "rural.xlsx")
 
         showinfo(title="Αρχεία εξόδου",
-                    message=f'Τα αποτελέσματα έχουν αποθηκευτεί στον φάκελο εκτέλεσης του προγράμματος.')
+                 message=f'Τα αποτελέσματα έχουν αποθηκευτεί στον φάκελο εκτέλεσης του προγράμματος.')
 
-    def cbSchoolColSelect(self, eventObject):
-        if self.cbSchoolCol.current() != -1:
-            self.ntrSchoolsFilename.configure(state='readonly')
-            self.btnOpenSchoolsFile.configure(state='normal')
+        self.window.destroy()
+
+    def cb_school_col_select(self, event_object):
+        if self.cb_school_col.current() != -1:
+            self.ntr_schools_filename.configure(state='readonly')
+            self.btn_get_schools_file.configure(state='normal')
 
     def create_widgets(self):
-        self.fData = Frame(self.window)
+        self.f_data = Frame(self.window)
 
-        self.lStudentsFile = Label(self.fData, text="Αρχείο μαθητών:")
-        self.lStudentsFile.grid(column=0, row=0, padx=10, pady=10, sticky=E)
+        self.l_students_file = Label(self.f_data, text="Αρχείο μαθητών:")
+        self.l_students_file.grid(column=0, row=0, padx=10, pady=10, sticky=E)
 
-        self.studentsFilename = StringVar()
-        self.studentsFilename.set('')
-        self.ntrStudentsFilename = Entry(self.fData, width=128, state='readonly', textvariable=self.studentsFilename)
-        self.ntrStudentsFilename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
+        self.students_filename = StringVar()
+        self.students_filename.set('')
+        self.ntr_students_filename = Entry(self.f_data, width=128, state='readonly',
+                                           textvariable=self.students_filename)
+        self.ntr_students_filename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
 
-        self.btnOpenStudentsFile = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getStudentsFilename)
-        self.btnOpenStudentsFile.grid(column=2, row=0, padx=10, pady=10)
+        self.btn_get_students_file = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_students_filename)
+        self.btn_get_students_file.grid(column=2, row=0, padx=10, pady=10)
 
-        self.lSchoolCol = Label(self.fData, text="Στήλη Σχολείου Προέλευσης:")
-        self.lSchoolCol.grid(column=0, row=1, padx=10, pady=10, sticky=E)
+        self.l_school_col = Label(self.f_data, text="Στήλη Σχολείου Προέλευσης:")
+        self.l_school_col.grid(column=0, row=1, padx=10, pady=10, sticky=E)
 
-        self.schoolCol = StringVar()
-        self.cbSchoolCol = Combobox(self.fData, width=125, textvariable=self.schoolCol, state='disabled')
-        self.cbSchoolCol.grid(column=1, row=1, padx=10, pady=10, sticky=W)
-        self.cbSchoolCol.bind("<<ComboboxSelected>>", self.cbSchoolColSelect)
+        self.school_col = StringVar()
+        self.cb_school_col = Combobox(self.f_data, width=125, textvariable=self.school_col, state='disabled')
+        self.cb_school_col.grid(column=1, row=1, padx=10, pady=10, sticky=W)
+        self.cb_school_col.bind("<<ComboboxSelected>>", self.cb_school_col_select)
 
-        self.lSchoolsFile = Label(self.fData, text="Αρχείο σχολείων\nπεριφέρειας:")
-        self.lSchoolsFile.grid(column=0, row=2, padx=10, pady=10, sticky=E)
+        self.l_schools_file = Label(self.f_data, text="Αρχείο σχολείων\nπεριφέρειας:")
+        self.l_schools_file.grid(column=0, row=2, padx=10, pady=10, sticky=E)
 
-        self.schoolsFilename = StringVar()
-        self.schoolsFilename.set('')
-        self.ntrSchoolsFilename = Entry(self.fData, width=128, state='disabled', textvariable=self.schoolsFilename)
-        self.ntrSchoolsFilename.grid(column=1, row=2, padx=10, pady=10, sticky=W)
+        self.schools_filename = StringVar()
+        self.schools_filename.set('')
+        self.ntr_schools_filename = Entry(self.f_data, width=128, state='disabled', textvariable=self.schools_filename)
+        self.ntr_schools_filename.grid(column=1, row=2, padx=10, pady=10, sticky=W)
 
-        self.btnOpenSchoolsFile = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getSchoolsFilename, state='disabled')
-        self.btnOpenSchoolsFile.grid(column=2, row=2, padx=10, pady=10)
+        self.btn_get_schools_file = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_schools_filename,
+                                           state='disabled')
+        self.btn_get_schools_file.grid(column=2, row=2, padx=10, pady=10)
 
-        self.btnRun = Button(self.fData, text="Εκτέλεση διαχωρισμού", command=self.run, state='disabled')
-        self.btnRun.grid(column=1, row=10, padx=10, pady=10)
+        self.btn_run = Button(self.f_data, text="Εκτέλεση διαχωρισμού", command=self.run, state='disabled')
+        self.btn_run.grid(column=1, row=10, padx=10, pady=10)
 
-        self.fData.pack()
+        self.f_data.pack()
 
 
 gui = GUI()

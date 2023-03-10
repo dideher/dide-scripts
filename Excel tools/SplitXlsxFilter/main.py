@@ -7,24 +7,22 @@ from openpyxl.utils import get_column_letter
 import os
 
 
-class GUI():
+class GUI:
     def __init__(self):
         self.window = Tk()
 
-        self.window.title("Διαχωρισμός φύλλου excel σε πολλά (Αντί για filter/select/copy/new file/paste/save)")
+        self.window.title("Διαχωρισμός αρχείου xlsx σε πολλά (Αντί για filter/select/copy/new file/paste/save)")
         self.window.resizable(False, False)
         self.create_widgets()
-
 
     def is_float(self, s):
         return s.replace('.', '', 1).isdecimal()
 
+    def parse_xlsx_data(self):
+        wb = load_workbook(filename=self.data_filename.get())
+        sheet = wb.active
 
-    def parseXlsxData(self):
-        workbook = load_workbook(filename=self.dataFilename.get())
-        sheet = workbook.active
-
-        self.xlsxData = list()
+        self.xlsx_data = list()
 
         for row in sheet.iter_rows():
             entry = list()
@@ -39,159 +37,144 @@ class GUI():
 
                 entry.append(text)
 
-            self.xlsxData.append(entry)
+            self.xlsx_data.append(entry)
 
-
-    def splitData(self):
+    def split_data(self):
         data = dict()
-        skipHeader = True
 
-        for r in self.xlsxData:
-            if skipHeader:
-                skipHeader = False
-                continue
-
-            temp = r.copy()
-
-            key = r[self.cbFilterCols.current()]
+        for row in self.xlsx_data[1:]:
+            key = row[self.cb_filter_cols.current()]
 
             if key == "":
                 key = "_EMPTY CELLS_"
 
             if key not in data:
                 data[key] = list()
-            data[key].append(temp)
+            data[key].append(row)
 
         logb = Workbook()
         logs = logb.active
-        logh = ["Σχολείο", "Πλήθος μαθητών"]
+        logh = [self.filter_cols.get(), "Πλήθος"]
         logs.append(logh)
 
         for key in data:
             logd = [key, len(data[key])]
             logs.append(logd)
 
-        notSaved = True
+        self.set_cols_width(logs)
 
-        outFile = "_log.xlsx"
-        outputFile = os.path.join(self.outputDirName.get(), outFile)
-        while notSaved:
-            try:
-                logb.save(outputFile)
-            except:
-                showwarning(title="Αρχείο σε χρήση...",
-                            message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση.".format(
-                                outputFile))
-            else:
-                notSaved = False
+        out_file = "_log.xlsx"
+        output_file = os.path.join(self.output_dir.get(), out_file)
+        self.safe_save(logb, output_file)
 
         for key in data:
             wb = Workbook()
             ws = wb.active
 
-            ws.append(self.xlsxData[0])
+            ws.append(self.xlsx_data[0])
             for row in data[key]:
                 ws.append(row)
 
-            column_widths = []
-            for row in ws.iter_rows():
-                for i, cell in enumerate(row):
-                    try:
-                        column_widths[i] = max(column_widths[i], len(str(cell.value)))
-                    except IndexError:
-                        column_widths.append(len(str(cell.value)))
+            self.set_cols_width(ws)
 
-            for i, column_width in enumerate(column_widths):
-                ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
+            out_file = (key.replace("<", "_").replace(">", "_").replace(":", "_").replace("\"", "_").replace("/", "_")
+                        .replace("\\", "_").replace("|", "_").replace("?", "_").replace("*", "_"))
+            out_file += ".xlsx"
+            output_file = os.path.join(self.output_dir.get(), out_file)
+            self.safe_save(wb, output_file)
 
-            outFile = (key.replace("<", "_").replace(">", "_").replace(":", "_").replace("\"", "_").replace("/", "_")
-                       .replace("\\", "_").replace("|", "_").replace("?", "_").replace("*", "_"))
-            outFile += ".xlsx"
-
-            notSaved = True
-
-            outputFile = os.path.join(self.outputDirName.get(), outFile)
-            while notSaved:
+    def set_cols_width(self, ws):
+        column_widths = []
+        for row in ws.iter_rows():
+            for i, cell in enumerate(row):
                 try:
-                    wb.save(outputFile)
-                except:
-                    showwarning(title="Αρχείο σε χρήση...",
-                                message="Παρακαλώ κλείστε το αρχείο '{}' ώστε να ολοκληρωθεί η αποθήκευση.".format(
-                                    outputFile))
-                else:
-                    notSaved = False
+                    column_widths[i] = max(column_widths[i], len(str(cell.value)))
+                except IndexError:
+                    column_widths.append(len(str(cell.value)))
 
+        for i, column_width in enumerate(column_widths):
+            ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
 
-    def getOutputDirName(self):
-        dName = filedialog.askdirectory(initialdir="./data/", title="Επιλέξτε τον φάκελο που θα αποθηκευτούν τα αρχεία")
+    def safe_save(self, wb, output_file):
+        not_saved = True
 
-        if dName == "":
+        while not_saved:
+            try:
+                wb.save(output_file)
+            except:
+                showwarning(title="Αρχείο σε χρήση...",
+                            message=f"Παρακαλώ κλείστε το αρχείο '{output_file}' ώστε να ολοκληρωθεί η αποθήκευση.")
+            else:
+                not_saved = False
+
+    def get_output_dir(self):
+        d_name = filedialog.askdirectory(initialdir="./data/",
+                                         title="Επιλέξτε τον φάκελο που θα αποθηκευτούν τα αρχεία")
+
+        if d_name == "":
             return
 
-        self.outputDirName.set(dName)
-        self.btnRun.configure(state='normal')
+        self.output_dir.set(d_name)
+        self.btn_run.configure(state='normal')
 
+    def get_data(self):
+        f_name = filedialog.askopenfilename(initialdir="./data/",
+                                            title="Επιλέξτε το αρχείο xlsx",
+                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
 
-    def getDataFilename(self):
-        fName = filedialog.askopenfilename(initialdir="./data/",
-                                           title="Επιλέξτε το αρχείο excel",
-                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
-
-        if fName == "":
+        if f_name == "":
             return
 
-        self.dataFilename.set(fName)
-        self.parseXlsxData()
-        self.cbFilterCols.configure(state='readonly')
-        self.cbFilterCols['values'] = self.xlsxData[0]
+        self.data_filename.set(f_name)
+        self.parse_xlsx_data()
+        self.cb_filter_cols.configure(state='readonly')
+        self.cb_filter_cols['values'] = self.xlsx_data[0]
 
-
-    def cbFilterColsSelect(self, eventObject):
-        if self.cbFilterCols.current() != -1:
-            self.ntrOutputDirName.configure(state='readonly')
-            self.btnOpenOutputDir.configure(state='normal')
-
+    def cb_filter_cols_select(self, event_object):
+        if self.cb_filter_cols.current() != -1:
+            self.ntr_output_dir.configure(state='readonly')
+            self.btn_get_output_dir.configure(state='normal')
 
     def run(self):
-        self.splitData()
+        self.split_data()
         showinfo(title="Ολοκλήρωση εκτέλεσης", message="Ο διαχωρισμός ολοκληρώθηκε.")
 
-
     def create_widgets(self):
-        self.fData = Frame(self.window)
+        self.f_data = Frame(self.window)
 
-        self.lData = Label(self.fData, text="Αρχείο:")
-        self.lData.grid(column=0, row=0, padx=10, pady=10, sticky=E)
+        self.l_data = Label(self.f_data, text="Αρχείο:")
+        self.l_data.grid(column=0, row=0, padx=10, pady=10, sticky=E)
 
-        self.dataFilename = StringVar()
-        self.ntrDataFilename = Entry(self.fData, width=128, state='readonly', textvariable=self.dataFilename)
-        self.ntrDataFilename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
+        self.data_filename = StringVar()
+        self.ntr_data_filename = Entry(self.f_data, width=128, state='readonly', textvariable=self.data_filename)
+        self.ntr_data_filename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
 
-        self.btnOpenData = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getDataFilename)
-        self.btnOpenData.grid(column=2, row=0, padx=10, pady=10)
+        self.btn_get_data = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_data)
+        self.btn_get_data.grid(column=2, row=0, padx=10, pady=10)
 
-        self.lFilterCol = Label(self.fData, text="Στήλη για διαχωρισμό:")
-        self.lFilterCol.grid(column=0, row=1, padx=10, pady=10, sticky=E)
+        self.l_filter_col = Label(self.f_data, text="Στήλη για διαχωρισμό:")
+        self.l_filter_col.grid(column=0, row=1, padx=10, pady=10, sticky=E)
 
-        self.filterCols = StringVar()
-        self.cbFilterCols = Combobox(self.fData, width=40, textvariable=self.filterCols, state='disabled')
-        self.cbFilterCols.bind("<<ComboboxSelected>>", self.cbFilterColsSelect)
-        self.cbFilterCols.grid(column=1, row=1, padx=10, pady=10, sticky='NSEW')
+        self.filter_cols = StringVar()
+        self.cb_filter_cols = Combobox(self.f_data, width=40, textvariable=self.filter_cols, state='disabled')
+        self.cb_filter_cols.bind("<<ComboboxSelected>>", self.cb_filter_cols_select)
+        self.cb_filter_cols.grid(column=1, row=1, padx=10, pady=10, sticky='NSEW')
 
-        self.lOutputDirName = Label(self.fData, text="Φάκελος για αποθήκευση των αρχείων:")
-        self.lOutputDirName.grid(column=0, row=2, padx=10, pady=10, sticky=E)
+        self.l_output_dir = Label(self.f_data, text="Φάκελος για αποθήκευση των αρχείων:")
+        self.l_output_dir.grid(column=0, row=2, padx=10, pady=10, sticky=E)
 
-        self.outputDirName = StringVar()
-        self.ntrOutputDirName = Entry(self.fData, width=128, state='disabled', textvariable=self.outputDirName)
-        self.ntrOutputDirName.grid(column=1, row=2, padx=10, pady=10, sticky=W)
+        self.output_dir = StringVar()
+        self.ntr_output_dir = Entry(self.f_data, width=128, state='disabled', textvariable=self.output_dir)
+        self.ntr_output_dir.grid(column=1, row=2, padx=10, pady=10, sticky=W)
 
-        self.btnOpenOutputDir = Button(self.fData, text="Επιλέξτε φάκελο...", command=self.getOutputDirName, state='disabled')
-        self.btnOpenOutputDir.grid(column=2, row=2, padx=10, pady=10)
+        self.btn_get_output_dir = Button(self.f_data, text="Επιλέξτε φάκελο...", command=self.get_output_dir,
+                                         state='disabled')
+        self.btn_get_output_dir.grid(column=2, row=2, padx=10, pady=10)
 
-        self.btnRun = Button(self.fData, text="Εκτέλεση διαχωρισμού", command=self.run, state='disabled')
-        self.btnRun.grid(column=1, row=10, padx=10, pady=10)
+        self.btn_run = Button(self.f_data, text="Εκτέλεση διαχωρισμού", command=self.run, state='disabled')
+        self.btn_run.grid(column=1, row=10, padx=10, pady=10)
 
-        self.fData.pack()
+        self.f_data.pack()
 
 
 gui = GUI()

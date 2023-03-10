@@ -24,7 +24,7 @@ class GUI():
 
         self.pdf = PdfFileReader(fName)
         self.ntrPagesNum.configure(state='readonly')
-        self.pagesNum.set(self.pdf.getNumPages())
+        self.pagesNum.set(str(self.pdf.getNumPages()))
         self.ntrPages.configure(state='normal')
         self.dataFilename.set(fName)
         self.btnRun.configure(state='normal')
@@ -71,6 +71,16 @@ class GUI():
 
         print(self.pagesSet)
 
+        allPagesSet = SortedSet()
+        pages_num = int(self.pagesNum.get())
+
+        for i in range(pages_num):
+            allPagesSet.add(i)
+
+        self.restOfPagesSet = allPagesSet.difference(self.pagesSet)
+
+        print(self.restOfPagesSet)
+
         if len(self.pagesSet) == 0:
             showwarning(title='Μη ορισμός σελίδων', message='Πρέπει να καταχωρίσετε τουλάχιστον μια σελίδα.')
             return False
@@ -89,6 +99,15 @@ class GUI():
         output = self.dataFilename.get().replace(".pdf", "_extraction.pdf")
         with open(output, 'wb') as output_pdf:
             pdf_writer.write(output_pdf)
+
+        rest_pdf_writer = PdfFileWriter()
+
+        for page in self.restOfPagesSet:
+            rest_pdf_writer.addPage(self.pdf.getPage(page))
+
+        output = self.dataFilename.get().replace(".pdf", "_rest.pdf")
+        with open(output, 'wb') as output_pdf:
+            rest_pdf_writer.write(output_pdf)
 
         showinfo(title="Ολοκλήρωση εκτέλεσης", message="Η εξαγωγή ολοκληρώθηκε.")
 

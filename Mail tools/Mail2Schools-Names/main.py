@@ -74,7 +74,7 @@ class GUI:
                 previewText += "Χωρίς κοινό συνημμένο." + "\n\n"
             else:
                 previewText += self.attachmentFilename.get() + "\n\n"
-            previewText += "-" * 20 + " Βιλίο διευθύνσεων " + "-" * 20 + "\n"
+            previewText += "-" * 20 + " Βιβλίο διευθύνσεων " + "-" * 20 + "\n"
             previewText += self.addressBookFilename.get() + "\n\n"
             previewText += "-" * 20 + " Φάκελος αρχείων " + "-" * 20 + "\n"
             previewText += self.filesDirName.get() + "\n\n"
@@ -86,7 +86,7 @@ class GUI:
 
         if not test:
             showinfo(title="Έναρξη αποστολής",
-                     message="Μην τερματίσετε την εφαρμογή μέχρι να εμφανιστεί το μήνημα ολοκλήρωσης της αποστολής.")
+                     message="Μην τερματίσετε την εφαρμογή μέχρι να εμφανιστεί το μήνυμα ολοκλήρωσης της αποστολής.")
             yag = yagmail.SMTP(sender_email, password=password)
 
         filesCounter = 0

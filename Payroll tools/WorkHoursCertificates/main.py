@@ -33,8 +33,23 @@ class GUI():
             copyfile(db_file, db_bak)
             self.parseXlsxData(db_file, self.db)
 
-    def validateSchool(self):
-        typed = self.school.get()
+    def validateSchool1(self):
+        typed = self.school1.get()
+
+        if typed == '':
+            return True
+
+        for item in self.schools:
+            if typed == item:
+                return True
+
+        return False
+
+    def validateSchool2(self):
+        typed = self.school2.get()
+
+        if typed == '':
+            return True
 
         for item in self.schools:
             if typed == item:
@@ -52,16 +67,26 @@ class GUI():
     def createDocx(self):
         self.docx_filename = ''
 
-        if not self.validateSchool():
-            self.school.set('')
-            self.cbSchool['values'] = self.schools
+        if not self.validateSchool1():
+            self.school1.set('')
+            self.cbSchool1['values'] = self.schools
+
+            showwarning(title='Λάθος τιμή σε πεδίο', message='Η τιμή του πεδίου "Σχολείο Τοποθέτησης" ήταν λανθασμένη.')
+
+        if not self.validateSchool2():
+            self.school2.set('')
+            self.cbSchool2['values'] = self.schools
+
+            showwarning(title='Λάθος τιμή σε πεδίο', message='Η τιμή του πεδίου "Σχολείο Διάθεσης" ήταν λανθασμένη.\n'
+                                                             'Η βεβαίωση θα δημιουργηθεί χωρίς το "Σχολείο Διάθεσης".')
 
         fieldsWithError = ''
 
         schoolYear = self.schoolYear.get()
         date1 = self.date1.get()
         arProt = self.arProt.get()
-        school = self.school.get()
+        school1 = self.school1.get()
+        school2 = self.school2.get()
         lastName = self.lastName.get()
         firstName = self.firstName.get()
         lastName_accusative = self.lastName_accusative.get()
@@ -71,30 +96,39 @@ class GUI():
         date2 = self.date2.get()
         hours = self.hours.get()
 
+        if school1 == school2 and school1 != '':
+            school2 = ''
+            self.school2.set('')
+            self.cbSchool2['values'] = self.schools
+
+            showwarning(title='Επανάληψη τιμής', message='Η τιμή του πεδίου "Σχολείο Διάθεσης" είναι ίδια '
+                                                         'με την τιμή του πεδίου "Σχολείο Τοποθέτησης".\n'
+                                                         'Η βεβαίωση θα δημιουργηθεί χωρίς το "Σχολείο Διάθεσης".')
+
         if schoolYear == '':
-            fieldsWithError += 'Διδακτικό Έτος\n'
+            fieldsWithError += '- Διδακτικό Έτος\n'
         if date1 == '':
-            fieldsWithError += 'Ημερομηνία (εγγράφου)\n'
+            fieldsWithError += '- Ημερομηνία (εγγράφου)\n'
         if arProt == '':
-            fieldsWithError += 'Αρ. Πρωτ.\n'
-        if school == '':
-            fieldsWithError += 'Σχολείο\n'
+            fieldsWithError += '- Αρ. Πρωτ.\n'
+        if school1 == '':
+            fieldsWithError += '- Σχολείο Τοποθέτησης\n'
         if lastName == '':
-            fieldsWithError += 'Επώνυμο (ονομαστική)\n'
+            fieldsWithError += '- Επώνυμο (ονομαστική)\n'
         if firstName == '':
-            fieldsWithError += 'Όνομα (ονομαστική)\n'
+            fieldsWithError += '- Όνομα (ονομαστική)\n'
         if lastName_accusative == '':
-            fieldsWithError += 'Επώνυμο (αιτιατική)\n'
+            fieldsWithError += '- Επώνυμο (αιτιατική)\n'
         if firstName_accusative == '':
-            fieldsWithError += 'Όνομα (αιτιατική)\n'
+            fieldsWithError += '- Όνομα (αιτιατική)\n'
         if fathersName == '':
-            fieldsWithError += 'Πατρώνυμο\n'
+            fieldsWithError += '- Πατρώνυμο\n'
         if specialty == '':
-            fieldsWithError += 'Ειδικότητα\n'
+            fieldsWithError += '- Ειδικότητα\n'
         if date2 == '':
-            fieldsWithError += 'Ημερομηνία αλλαγής ωραρίου:\n'
+            fieldsWithError += '- Ημερομηνία αλλαγής ωραρίου:\n'
         if hours == '':
-            fieldsWithError += 'Ώρες'
+            fieldsWithError += '- Ώρες'
 
         if fieldsWithError != '':
             showwarning(title='Συμπλήρωση πεδίων',
@@ -111,7 +145,7 @@ class GUI():
             self.docx_filename = f'{lastName} {firstName} του {fathersName}.docx'
 
         certificate = [lastName, firstName, fathersName, specialty,
-                       schoolYear, date1, arProt, school,
+                       schoolYear, date1, arProt, school1, school2,
                        espa, date2, hours]
 
         if self.certificateExists(certificate):
@@ -126,8 +160,13 @@ class GUI():
         text_c = "ΠΡΟΣ:"
         text_d = f'{lastName_accusative} {firstName_accusative}'
         text_e = "ΚΟΙΝ:"
-        text_f = f'  1)  {school}'
-        text_g = "  2)  ΠΥΣΔΕ Ν. ΗΡΑΚΛΕΙΟΥ"
+        if school2 == '':
+            text_f = f'  1)  {school1}'
+            text_g = "  2)  ΠΥΣΔΕ Ν. ΗΡΑΚΛΕΙΟΥ"
+        else:
+            text_f = f'  1)  {school1}'
+            text_g = f'  2)  {school2}'
+            text_h = "  3)  ΠΥΣΔΕ Ν. ΗΡΑΚΛΕΙΟΥ"
 
         text_1 = "Σύμφωνα με τις διατάξεις του ν. 4152/2013 υποπ.Θ1, παρ2 και του ν.2413/1996 αρ48, παρ2 και των υπ. αρ. " \
                  "123995/Δ1/20-12-2010, 123948/Δ2/6-9-2013 & 181230/Ε2/11-11-2015 εγκυκλίων του Υπουργείου Παιδείας, " \
@@ -168,6 +207,9 @@ class GUI():
         self.set_normal_style(paragraph, text_f, space_after=0)
         paragraph = cell.add_paragraph()
         self.set_normal_style(paragraph, text_g, space_after=0)
+        if school2 != '':
+            paragraph = cell.add_paragraph()
+            self.set_normal_style(paragraph, text_h, space_after=0)
 
         paragraph = doc.paragraphs[3]
         paragraph.text = ''
@@ -210,8 +252,10 @@ class GUI():
 
         self.date1.set('')
         self.arProt.set('')
-        self.school.set('')
-        self.cbSchool['values'] = self.schools
+        self.school1.set('')
+        self.cbSchool1['values'] = self.schools
+        self.school2.set('')
+        self.cbSchool2['values'] = self.schools
         if not fromSelection:
             self.teacher.set('')
             self.cbTeacher['values'] = self.teachers
@@ -252,7 +296,8 @@ class GUI():
         self.ntrSchoolYear.configure(state='normal')
         self.ntrDate1.configure(state='normal')
         self.ntrArProt.configure(state='normal')
-        self.cbSchool.configure(state='normal')
+        self.cbSchool1.configure(state='normal')
+        self.cbSchool2.configure(state='normal')
 
         if (str(self.btnOpenTeachersData['state']) == 'disabled'):
             self.cbTeacher.configure(state='normal')
@@ -271,18 +316,31 @@ class GUI():
         self.btnCreateDocx.configure(state='normal')
         self.btnClear.configure(state='normal')
 
-    def schoolFilterList(self, e):
-        typed = self.school.get()
+    def school1FilterList(self, e):
+        typed = self.school1.get()
 
         if typed == '':
-            self.cbSchool['values'] = self.schools
+            self.cbSchool1['values'] = self.schools
         else:
             filteredList = list()
             for item in self.schools:
                 if typed.upper() in item.upper():
                     filteredList.append(item)
 
-            self.cbSchool['values'] = filteredList
+            self.cbSchool1['values'] = filteredList
+
+    def school2FilterList(self, e):
+        typed = self.school2.get()
+
+        if typed == '':
+            self.cbSchool2['values'] = self.schools
+        else:
+            filteredList = list()
+            for item in self.schools:
+                if typed.upper() in item.upper():
+                    filteredList.append(item)
+
+            self.cbSchool2['values'] = filteredList
 
     def teacherFilterList(self, e):
         self.clearData(fromSelection=True)
@@ -342,10 +400,11 @@ class GUI():
         msg += f'ΔΙΔΑΚΤΙΚΟ ΕΤΟΣ:\t\t{info[4]}\n'
         msg += f'ΗΜΕΡΟΜΗΝΙΑ:\t\t{info[5]}\n'
         msg += f'ΑΡ. ΠΡΩΤ.:\t\t{info[6]}\n'
-        msg += f'ΣΧΟΛΕΙΟ:\t\t{info[7]}\n'
-        msg += f'ΠΡΟΓΡΑΜΜΑ:\t\t{info[8]}\n'
-        msg += f'ΗΜΕΡ. ΑΛΛΑΓΗΣ ΩΡΑΡΙΟΥ:\t{info[9]}\n'
-        msg += f'ΩΡΕΣ:\t\t\t{info[10]}'
+        msg += f'ΣΧΟΛΕΙΟ ΤΟΠΟΘΕΤΗΣΗΣ:\t{info[7]}\n'
+        msg += f'ΣΧΟΛΕΙΟ ΔΙΑΘΕΣΗΣ:\t{info[8]}\n'
+        msg += f'ΠΡΟΓΡΑΜΜΑ:\t\t{info[9]}\n'
+        msg += f'ΗΜΕΡ. ΑΛΛΑΓΗΣ ΩΡΑΡΙΟΥ:\t{info[10]}\n'
+        msg += f'ΩΡΕΣ:\t\t\t{info[11]}'
         showinfo(title='Στοιχεία Τελευταίας Βεβαίωσης', message=msg)
 
     def possessiveCase(self, text):
@@ -471,7 +530,7 @@ class GUI():
 
         self.btnLastCertificate = Button(self.fData, text="Τελευταία Βεβαίωση", command=self.showCertificateInfo,
                                          state='disabled')
-        self.btnLastCertificate.grid(column=2, row=3, padx=10, pady=10, sticky=W)
+        self.btnLastCertificate.grid(column=2, row=3, padx=10, pady=10)
 
         self.lfDocInfoFrame = LabelFrame(self.fData, text="Στοιχεία Εγγράφου")
         self.lfDocInfoFrame.grid(column=0, row=4, columnspan=3, padx=10, pady=10, sticky=EW)
@@ -480,18 +539,18 @@ class GUI():
         self.lDate1.grid(column=0, row=0, padx=10, pady=10, sticky=E)
 
         self.date1 = StringVar()
-        self.ntrDate1 = Entry(self.lfDocInfoFrame, width=32, state='disabled', textvariable=self.date1)
+        self.ntrDate1 = Entry(self.lfDocInfoFrame, width=20, state='disabled', textvariable=self.date1)
         self.ntrDate1.grid(column=1, row=0, padx=10, pady=10, sticky=W)
 
         self.lArProt = Label(self.lfDocInfoFrame, text="Αρ. Πρωτ.:")
         self.lArProt.grid(column=2, row=0, padx=10, pady=10, sticky=E)
 
         self.arProt = StringVar()
-        self.ntrArProt = Entry(self.lfDocInfoFrame, width=32, state='disabled', textvariable=self.arProt)
+        self.ntrArProt = Entry(self.lfDocInfoFrame, width=20, state='disabled', textvariable=self.arProt)
         self.ntrArProt.grid(column=3, row=0, padx=10, pady=10, sticky=W)
 
-        self.lSchool = Label(self.lfDocInfoFrame, text="Σχολείο:")
-        self.lSchool.grid(column=4, row=0, padx=10, pady=10, sticky=E)
+        self.lSchool1 = Label(self.lfDocInfoFrame, text="Σχολείο Τοποθέτησης:")
+        self.lSchool1.grid(column=4, row=0, padx=10, pady=10, sticky=E)
 
         self.schools = [
             "1ο ΓΥΜΝΑΣΙΟ ΗΡΑΚΛΕΙΟΥ",
@@ -593,12 +652,22 @@ class GUI():
             "2ο Ε.Κ."
         ]
 
-        self.school = StringVar()
-        self.cbSchool = Combobox(self.lfDocInfoFrame, width=64, textvariable=self.school, state='disabled')
-        self.cbSchool.bind("<KeyRelease>", self.schoolFilterList)
-        self.cbSchool.bind("<<ComboboxSelected>>", self.schoolFilterList)
-        self.cbSchool['values'] = self.schools
-        self.cbSchool.grid(column=5, row=0, padx=10, pady=5)
+        self.school1 = StringVar()
+        self.cbSchool1 = Combobox(self.lfDocInfoFrame, width=24, textvariable=self.school1, state='disabled')
+        self.cbSchool1.bind("<KeyRelease>", self.school1FilterList)
+        self.cbSchool1.bind("<<ComboboxSelected>>", self.school1FilterList)
+        self.cbSchool1['values'] = self.schools
+        self.cbSchool1.grid(column=5, row=0, padx=10, pady=5)
+
+        self.lSchool2 = Label(self.lfDocInfoFrame, text="Σχολείο Διάθεσης:")
+        self.lSchool2.grid(column=6, row=0, padx=10, pady=10, sticky=E)
+
+        self.school2 = StringVar()
+        self.cbSchool2 = Combobox(self.lfDocInfoFrame, width=24, textvariable=self.school2, state='disabled')
+        self.cbSchool2.bind("<KeyRelease>", self.school2FilterList)
+        self.cbSchool2.bind("<<ComboboxSelected>>", self.school2FilterList)
+        self.cbSchool2['values'] = self.schools
+        self.cbSchool2.grid(column=7, row=0, padx=10, pady=5)
 
         self.lfTeacherInfoFrame = LabelFrame(self.fData, text="Στοιχεία Εκπαιδευτικού")
         self.lfTeacherInfoFrame.grid(column=0, row=5, columnspan=3, padx=10, pady=10, sticky=EW)
@@ -691,7 +760,7 @@ class GUI():
     def saveDB(self):
         if self.newCertificatesCreated:
             header = ['ΕΠΩΝΥΜΟ', 'ΟΝΟΜΑ', 'ΠΑΤΡΩΝΥΜΟ', 'ΚΛΑΔΟΣ',
-                      'ΔΙΔΑΚΤΙΚΟ ΕΤΟΣ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΑΡ. ΠΡΩΤ.', 'ΣΧΟΛΕΙΟ',
+                      'ΔΙΔΑΚΤΙΚΟ ΕΤΟΣ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΑΡ. ΠΡΩΤ.', 'ΣΧΟΛΕΙΟ 1', 'ΣΧΟΛΕΙΟ 2',
                       'ΠΡΟΓΡΑΜΜΑ', 'ΗΜΕΡΟΜΗΝΙΑ ΑΛΛΑΓΗΣ ΩΡΑΡΙΟΥ', 'ΩΡΕΣ']
 
             wb = Workbook()

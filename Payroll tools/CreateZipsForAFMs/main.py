@@ -7,7 +7,7 @@ from os import walk
 from zipfile import ZipFile
 
 
-class GUI():
+class GUI:
     def __init__(self):
         self.window = Tk()
 
@@ -15,26 +15,26 @@ class GUI():
         self.window.resizable(False, False)
         self.create_widgets()
 
-    def getOutputDirName(self):
-        dName = filedialog.askdirectory(initialdir="./data/",
-                                        title="Επιλέξτε τον φάκελο που θα αποθηκευτούν τα αρχεία zip")
+    def get_output_dir(self):
+        d_name = filedialog.askdirectory(initialdir="./data/",
+                                         title="Επιλέξτε τον φάκελο που θα αποθηκευτούν τα αρχεία zip")
 
-        if dName == "":
+        if d_name == "":
             return
 
-        self.outputDirName.set(dName)
-        self.btnRun.configure(state='normal')
+        self.output_dir.set(d_name)
+        self.btn_run.configure(state='normal')
 
-    def getInputDirName(self):
-        dName = filedialog.askdirectory(initialdir="./data/",
-                                        title="Επιλέξτε τον φάκελο με τα αρχεία εισόδου")
+    def get_input_dir(self):
+        d_name = filedialog.askdirectory(initialdir="./data/",
+                                         title="Επιλέξτε τον φάκελο με τα αρχεία εισόδου")
 
-        if dName == "":
+        if d_name == "":
             return
 
-        self.inputDirName.set(dName)
-        self.ntrOutputDirName.configure(state='readonly')
-        self.btnOpenOutputDir.configure(state='normal')
+        self.input_dir.set(d_name)
+        self.ntr_output_dir.configure(state='readonly')
+        self.btn_get_output_dir.configure(state='normal')
 
     def verify_afm(self, value):
         afm = value
@@ -64,47 +64,54 @@ class GUI():
         else:
             return False
 
-    def getAFM(self, text):
+    def get_afm(self, text):
         split_text = text.split('.')
 
-        return split_text[0][-9:]
+        f_name = split_text[0]
+        parts = f_name.split('_')
 
-    def createAFMlist(self):
+        for part in parts:
+            if self.verify_afm(part):
+                return part
+
+        return None
+
+    def create_afm_list(self):
         self.afms = set()
         self.errors = ''
         self.err_counter = 0
 
-        for path, dirs, files in walk(self.inputDirName.get()):
+        for path, dirs, files in walk(self.input_dir.get()):
             for file in files:
-                afm = self.getAFM(file)
+                afm = self.get_afm(file)
 
-                if self.verify_afm(afm):
+                if afm is not None:
                     self.afms.add(afm)
                 else:
                     self.err_counter += 1
                     self.errors += f'{self.err_counter}: {path}/{file}\n'
 
-    def createZips(self):
-        inputDir = self.inputDirName.get()
+    def create_zips(self):
+        input_dir = self.input_dir.get()
 
         for afm in self.afms:
 
-            zipObj = ZipFile(os.path.join(self.outputDirName.get(), f'{afm}.zip'), 'w')
+            zip_obj = ZipFile(os.path.join(self.output_dir.get(), f'{afm}.zip'), 'w')
 
-            for path, dirs, files in walk(inputDir):
+            for path, dirs, files in walk(input_dir):
                 for file in files:
                     if afm in file:
                         file_path = os.path.join(path, file)
-                        zip_path = file_path.replace(inputDir, '')
-                        zipObj.write(file_path, zip_path)
+                        zip_path = file_path.replace(input_dir, '')
+                        zip_obj.write(file_path, zip_path)
 
-            zipObj.close()
+            zip_obj.close()
 
     def run(self):
-        self.btnRun.configure(state='disabled')
+        self.btn_run.configure(state='disabled')
 
-        self.createAFMlist()
-        self.createZips()
+        self.create_afm_list()
+        self.create_zips()
 
         showinfo(title="Ολοκλήρωση εκτέλεσης", message="H δημιουργία των zip αρχείων ολοκληρώθηκε.")
 
@@ -112,34 +119,36 @@ class GUI():
             print(20 * '-', 'Λάθη', 20 * '-')
             print(self.errors)
 
+        self.window.destroy()
+
     def create_widgets(self):
-        self.fData = Frame(self.window)
+        self.f_data = Frame(self.window)
 
-        self.lInputDirName = Label(self.fData, text="Φάκελος με αρχεία εισόδου:")
-        self.lInputDirName.grid(column=0, row=0, padx=10, pady=10, sticky=E)
+        self.l_input_dir = Label(self.f_data, text="Φάκελος με αρχεία εισόδου:")
+        self.l_input_dir.grid(column=0, row=0, padx=10, pady=10, sticky=E)
 
-        self.inputDirName = StringVar()
-        self.ntrInputDirName = Entry(self.fData, width=128, state='readonly', textvariable=self.inputDirName)
-        self.ntrInputDirName.grid(column=1, row=0, padx=10, pady=10, sticky=W)
+        self.input_dir = StringVar()
+        self.ntr_input_dir = Entry(self.f_data, width=128, state='readonly', textvariable=self.input_dir)
+        self.ntr_input_dir.grid(column=1, row=0, padx=10, pady=10, sticky=W)
 
-        self.btnOpenInputDir = Button(self.fData, text="Επιλέξτε φάκελο...", command=self.getInputDirName)
-        self.btnOpenInputDir.grid(column=2, row=0, padx=10, pady=10)
+        self.btn_get_input_dir = Button(self.f_data, text="Επιλέξτε φάκελο...", command=self.get_input_dir)
+        self.btn_get_input_dir.grid(column=2, row=0, padx=10, pady=10)
 
-        self.lOutputDirName = Label(self.fData, text="Φάκελος για αποθήκευση των αρχείων:")
-        self.lOutputDirName.grid(column=0, row=1, padx=10, pady=10, sticky=E)
+        self.l_output_dir = Label(self.f_data, text="Φάκελος για αποθήκευση των αρχείων:")
+        self.l_output_dir.grid(column=0, row=1, padx=10, pady=10, sticky=E)
 
-        self.outputDirName = StringVar()
-        self.ntrOutputDirName = Entry(self.fData, width=128, state='disabled', textvariable=self.outputDirName)
-        self.ntrOutputDirName.grid(column=1, row=1, padx=10, pady=10, sticky=W)
+        self.output_dir = StringVar()
+        self.ntr_output_dir = Entry(self.f_data, width=128, state='disabled', textvariable=self.output_dir)
+        self.ntr_output_dir.grid(column=1, row=1, padx=10, pady=10, sticky=W)
 
-        self.btnOpenOutputDir = Button(self.fData, text="Επιλέξτε φάκελο...", command=self.getOutputDirName,
-                                       state='disabled')
-        self.btnOpenOutputDir.grid(column=2, row=1, padx=10, pady=10)
+        self.btn_get_output_dir = Button(self.f_data, text="Επιλέξτε φάκελο...", command=self.get_output_dir,
+                                         state='disabled')
+        self.btn_get_output_dir.grid(column=2, row=1, padx=10, pady=10)
 
-        self.btnRun = Button(self.fData, text="Εκτέλεση", command=self.run, state='disabled')
-        self.btnRun.grid(column=1, row=10, padx=10, pady=10)
+        self.btn_run = Button(self.f_data, text="Εκτέλεση", command=self.run, state='disabled')
+        self.btn_run.grid(column=1, row=10, padx=10, pady=10)
 
-        self.fData.pack()
+        self.f_data.pack()
 
 
 gui = GUI()

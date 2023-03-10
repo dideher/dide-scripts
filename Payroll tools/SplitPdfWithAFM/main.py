@@ -2,12 +2,11 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter.ttk import *
 from tkinter.messagebox import showinfo
-from PyPDF2 import PdfFileReader, PdfFileWriter
-import slate3k as slate
+import fitz
 import os
 
 
-class GUI():
+class GUI:
     def __init__(self):
         self.window = Tk()
 
@@ -77,7 +76,10 @@ class GUI():
             if self.verify_afm(item) and item != '099709779':
                 afmList.append(item)
 
-        return afmList[-1]
+        if afmList:
+            return afmList[-1]
+        else:
+            return self.last_afm
 
     def run(self):
         self.btnRun.configure(state='disabled')
@@ -87,29 +89,30 @@ class GUI():
 
         data = dict()
 
-        showinfo(title="Έναρξη εκτέλεσης",
-                 message="Η ανάγνωση του κειμένου απαιτεί αρκετό χρόνο.\nMην τερματίσετε την εφαρμογή μέχρι να εμφανιστεί το μήνυμα της ολοκλήρωσης.")
+        pdf = fitz.open(filename)
+        self.last_afm = '000000000'
+        for page in range(pdf.page_count):
+            pageObj = pdf[page]
+            pageText = pageObj.get_text("text")
+            textList = self.removeSpaces(pageText.replace('\n', ' ').split(' '))
 
-        extracted_text = slate.PDF(open(filename, 'rb'))
-        pdf = PdfFileReader(filename)
-        for page in range(pdf.getNumPages()):
-            pageObj = pdf.getPage(page)
-            pageText = self.removeSpaces(extracted_text[page].replace("\n", " ").strip().split(" "))
-
-            afm = self.findAFM(pageText)
+            afm = self.findAFM(textList)
+            self.last_afm = afm
             if afm not in data:
                 data[afm] = list()
-            data[afm].append(pageObj)
+            data[afm].append(page)
 
         for afm in data:
-            pdf_writer = PdfFileWriter()
+            pdf_out = fitz.open()
 
-            for pageObj in data[afm]:
-                pdf_writer.addPage(pageObj)
+            for page in data[afm]:
+                pdf_out.insert_pdf(pdf, from_page=page, to_page=page)
 
-            output = os.path.join(outputDir, afm + ".pdf")
-            with open(output, 'wb') as output_pdf:
-                pdf_writer.write(output_pdf)
+            output_pdf = os.path.join(outputDir, afm + ".pdf")
+            pdf_out.save(output_pdf)
+            pdf_out.close()
+
+        pdf.close()
 
         showinfo(title="Ολοκλήρωση εκτέλεσης", message="Ο διαχωρισμός ολοκληρώθηκε.")
 

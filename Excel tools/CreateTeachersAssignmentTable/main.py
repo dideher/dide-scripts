@@ -36,22 +36,52 @@ class GUI:
 
             self.xlsx_data.append(entry)
 
+    def check_for_errors(self):
+        errors = ""
+        for i, xlsx_entry in enumerate(self.xlsx_data):
+            if xlsx_entry[1] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΕΠΙΘΕΤΟ" είναι κενό.\n'
+            if xlsx_entry[2] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΟΝΟΜΑ" είναι κενό.\n'
+            if xlsx_entry[3] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΠΑΤΡΩΝΥΜΟ" είναι κενό.\n'
+            if xlsx_entry[5] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΕΙΔΙΚΟΚΟΤΗΤΑ" είναι κενό.\n'
+            if xlsx_entry[9] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΣΧ. ΑΝΑΛΗΨΗΣ" είναι κενό.\n'
+            if xlsx_entry[11] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΣΧΟΛΕΙΟ" είναι κενό.\n'
+            if xlsx_entry[12] == "":
+                errors += f'Γραμμή {i + 1:3}: Το πεδίο "ΩΡΕΣ" είναι κενό.\n'
+
+        for i, xlsx_entry in enumerate(self.xlsx_data[1:]):
+            if xlsx_entry[9] == 'ΝΑΙ':
+                xlsx_entry[9] = 'NAI'
+                print(f'Γραμμή {i + 2:3}: Μετατροπή των ελληνικών χαρακτήρων σε αγγλικούς.')
+
+        if errors != "":
+            print(20 * '-', ' ΛΑΘΗ ', 20 * '-')
+            print(errors)
+            return True
+
+        return False
+
     def extract_data(self):
         for xlsx_entry in self.xlsx_data[1:]:
-            afm = xlsx_entry[4]
+            teacher_id = xlsx_entry[1] + xlsx_entry[2] + xlsx_entry[3] + xlsx_entry[5]
 
-            if afm not in self.data:
-                self.data[afm] = list()
+            if teacher_id not in self.data:
+                self.data[teacher_id] = list()
 
-            self.data[afm].append([f'{xlsx_entry[1]} {xlsx_entry[2]}', xlsx_entry[3], xlsx_entry[6],
-                                   xlsx_entry[10], xlsx_entry[12], xlsx_entry[13]])
+            self.data[teacher_id].append([f'{xlsx_entry[1]} {xlsx_entry[2]}', xlsx_entry[3], xlsx_entry[5],
+                                          xlsx_entry[11], xlsx_entry[12]])
 
     def create_rows(self):
         doc = docx.Document()
 
         count_lines = 0
         for entry in self.xlsx_data[1:]:
-            if entry[10] != 'NAI':
+            if entry[9] != 'NAI':
                 count_lines += 1
 
         for entry in self.data:
@@ -71,10 +101,10 @@ class GUI:
 
         i = 0
         end_row = 0
-        for afm in self.data:
+        for teacher_id in self.data:
             i += 1
 
-            count = len(self.data[afm]) - 1
+            count = len(self.data[teacher_id]) - 1
 
             start_row = end_row + 1
             if count == 0:
@@ -85,26 +115,26 @@ class GUI:
             print(f'AA: {i}, sr: {start_row}, er: {end_row}')
             if start_row != end_row:
                 self.merge_cells(table, start_row, end_row, 0, str(i))
-                self.merge_cells(table, start_row, end_row, 1, self.data[afm][0][0])
-                self.merge_cells(table, start_row, end_row, 2, self.data[afm][0][1])
-                self.merge_cells(table, start_row, end_row, 3, self.data[afm][0][2])
-                self.merge_cells(table, start_row, end_row, 4, self.data[afm][0][4])
-                self.merge_cells(table, start_row, end_row, 5, self.data[afm][0][5])
+                self.merge_cells(table, start_row, end_row, 1, self.data[teacher_id][0][0])
+                self.merge_cells(table, start_row, end_row, 2, self.data[teacher_id][0][1])
+                self.merge_cells(table, start_row, end_row, 3, self.data[teacher_id][0][2])
+                self.merge_cells(table, start_row, end_row, 4, self.data[teacher_id][0][3])
+                self.merge_cells(table, start_row, end_row, 5, self.data[teacher_id][0][4])
 
-                for j, entry in enumerate(self.data[afm][1:]):
-                    table.cell(start_row + j, 6).text = entry[4]
-                    table.cell(start_row + j, 7).text = entry[5]
+                for j, entry in enumerate(self.data[teacher_id][1:]):
+                    table.cell(start_row + j, 6).text = entry[3]
+                    table.cell(start_row + j, 7).text = entry[4]
             else:
                 table.cell(start_row, 0).text = str(i)
-                table.cell(start_row, 1).text = self.data[afm][0][0]
-                table.cell(start_row, 2).text = self.data[afm][0][1]
-                table.cell(start_row, 3).text = self.data[afm][0][2]
-                table.cell(start_row, 4).text = self.data[afm][0][4]
-                table.cell(start_row, 5).text = self.data[afm][0][5]
+                table.cell(start_row, 1).text = self.data[teacher_id][0][0]
+                table.cell(start_row, 2).text = self.data[teacher_id][0][1]
+                table.cell(start_row, 3).text = self.data[teacher_id][0][2]
+                table.cell(start_row, 4).text = self.data[teacher_id][0][3]
+                table.cell(start_row, 5).text = self.data[teacher_id][0][4]
 
                 if count == 1:
-                    table.cell(start_row, 6).text = self.data[afm][1][4]
-                    table.cell(start_row, 7).text = self.data[afm][1][5]
+                    table.cell(start_row, 6).text = self.data[teacher_id][1][3]
+                    table.cell(start_row, 7).text = self.data[teacher_id][1][4]
 
         not_saved = True
 
@@ -140,11 +170,19 @@ class GUI:
 
     def run(self):
         self.btn_run.configure(state='disabled')
+
+        if self.check_for_errors():
+            showwarning(title='Λάθη στο αρχείο εισόδου',
+                        message=f'Για να δημιουργηθεί ο πίνακας είναι απαραίτητη η διόρθωση του αρχείου εισόδου.')
+            return
+
         self.extract_data()
         self.create_rows()
 
         showinfo(title='Ολοκλήρωση Εκτέλεσης',
                  message=f'Η δημιουργία του πίνακα τοποθετήσεων ολοκληρώθηκε.')
+
+        self.window.destroy()
 
     def create_widgets(self):
         self.l_input_file = Label(self.f_data, text="Αρχείο xlsx:")
