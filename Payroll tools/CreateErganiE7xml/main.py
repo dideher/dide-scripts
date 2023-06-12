@@ -54,7 +54,6 @@ class GUI:
         kallikratis_pararthmatos = '91700101'
         yphkoothta = '048'
         typos_taytothtas = 'ΔAT'
-        epipedo_morfosis = '11'
         xaraktirismos = '1'
         sxeshapasxolisis = '1'
         oros = '0'
@@ -73,7 +72,7 @@ class GUI:
             mother_name = entry[4]
 
             xlsx_sex = entry[5]
-            if xlsx_sex == 'ΑΝΤΡΑΣ' or xlsx_sex == 'Άντρας':
+            if xlsx_sex == 'ΑΝΤΡΑΣ':
                 sex = '0'
             else:
                 sex = '1'
@@ -81,11 +80,11 @@ class GUI:
             birthdate = entry[6]
 
             xlsx_marital_status = entry[7]
-            if xlsx_marital_status == 'Άγαμος' or xlsx_marital_status == 'Αγαμος/η':
+            if xlsx_marital_status == 'ΑΓΑΜΟΣ':
                 marital_status = '0'
-            elif xlsx_marital_status == 'Έγγαμος' or xlsx_marital_status == 'Έγγαμος/η':
+            elif xlsx_marital_status == 'ΕΓΓΑΜΟΣ':
                 marital_status = '1'
-            elif xlsx_marital_status == 'Διαζευγμένος/η' or xlsx_marital_status == 'Διάζευξη/Χηρεία':
+            elif xlsx_marital_status == 'ΔΙΑΖΕΥΓΜΕΝΟΣ':
                 marital_status = '2'
             else:
                 marital_status = '3'
@@ -96,17 +95,21 @@ class GUI:
             specialty_code = entry[12]
             start_date = entry[13]
             end_date = entry[14]
-            xlsx_salary = entry[15]
 
+            xlsx_salary = entry[15]
             if ',' in xlsx_salary:
                 salary = xlsx_salary
             else:
                 salary = xlsx_salary + ',00'
 
+            epipedo_morfosis = entry[16]
+            if epipedo_morfosis == 'ΑΕΙ':
+                epipedo_morfosis = '11'
+
             xlsx_work_status = entry[17]
-            if xlsx_work_status == 'Αναπληρωτές' or xlsx_work_status == 'Αναπληρωτής Πλήρους Ωραρίου':
+            if xlsx_work_status == 'ΠΛΗΡΗΣ':
                 work_status = '0'
-            elif xlsx_work_status == 'Αναπληρωτής Μειωμένου Ωραρίου':
+            elif xlsx_work_status == 'ΜΕΡΙΚΗ':
                 work_status = '1'
             else:
                 work_status = '2'
@@ -232,7 +235,7 @@ class GUI:
             f_foreign_file = ET.SubElement(anaggelia_e7, "f_foreign_file")
             f_young_file = ET.SubElement(anaggelia_e7, "f_young_file")
 
-        xmlstr = minidom.parseString(ET.tostring(anaggelies_e7)).toprettyxml(indent="    ", encoding="utf-8")
+        xmlstr = minidom.parseString(ET.tostring(anaggelies_e7)).toprettyxml(indent="  ", encoding="utf-8")
         with open("ergani.xml", "wb") as f:
             f.write(xmlstr)
 

@@ -30,6 +30,7 @@ class GUI:
                   'f_arithmos_teknon',
                   'f_amka',
                   'f_ar_taytothtas',
+                  'ΚΛΑΔΟΣ',
                   'f_eidikothta',
                   'f_proslipsidate',
                   'f_lixisymbashdate',
@@ -42,7 +43,11 @@ class GUI:
         for child in root:
             entry = list()
             for field in fields:
-                value = child.find(field).text
+                if field == 'ΚΛΑΔΟΣ':
+                    value = ''
+                else:
+                    value = child.find(field).text
+
                 if field == 'f_sex':
                     # (0) ΑΝΤΡΑΣ - (1) ΓΥΝΑΙΚΑ
                     if value == '0':
@@ -89,6 +94,7 @@ class GUI:
                   'f_arithmos_teknon',
                   'f_amka',
                   'f_ar_taytothtas',
+                  'ΚΛΑΔΟΣ',
                   'f_eidikothta',
                   'f_proslipsidate',
                   'f_lixisymbashdate',

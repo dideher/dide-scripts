@@ -27,14 +27,14 @@ class GUI:
 
         return ecd_list
 
-    def getAPD(self):
-        fName = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
-                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
+    def get_apd(self):
+        f_name = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
+                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
 
-        if fName == "":
+        if f_name == "":
             return
 
-        self.apd = self.parseXlsxData(fName)
+        self.apd = self.parse_xlsx_data(f_name)
 
         header = ["Τύπος Εγγραφής",
                   "Αριθμός Μητρώου Ασφαλισμένου",
@@ -83,23 +83,25 @@ class GUI:
         for item in self.apd[1:]:
             afm = item[8]
             specialty_code = item[15]
+            type_of_payment = item[22]
 
-            self.cursor.execute(f"INSERT INTO apd VALUES ('{afm}', '{specialty_code}')")
-            self.conn.commit()
+            if type_of_payment == '001':
+                self.cursor.execute(f"INSERT INTO apd VALUES ('{afm}', '{specialty_code}')")
+                self.conn.commit()
 
-        self.btnGetAPD.configure(state='disabled')
-        self.apdFilename.set(fName)
+        self.btn_get_apd.configure(state='disabled')
+        self.apd_filename.set(f_name)
 
-        self.btnGetPayroll.configure(state='normal')
+        self.btn_get_payroll.configure(state='normal')
 
-    def getPayroll(self):
-        fName = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
-                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
+    def get_payroll(self):
+        f_name = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
+                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
 
-        if fName == "":
+        if f_name == "":
             return
 
-        self.payroll = self.parseXlsxData(fName)
+        self.payroll = self.parse_xlsx_data(f_name)
 
         header = ["A/A",
                   "ΕΙΔΟΣ",
@@ -366,19 +368,19 @@ class GUI:
             print(20 * '-', ' Χρειάζονται διόρθωση ', 20 * '-')
             print(errors)
 
-        self.btnGetPayroll.configure(state='disabled')
-        self.payrollFilename.set(fName)
+        self.btn_get_payroll.configure(state='disabled')
+        self.payroll_filename.set(f_name)
 
-        self.btnGetTeachers.configure(state='normal')
+        self.btn_get_teachers.configure(state='normal')
 
-    def getTeachers(self):
-        fName = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
-                                           filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
+    def get_teachers(self):
+        f_name = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
+                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
 
-        if fName == "":
+        if f_name == "":
             return
 
-        self.teachers = self.parseXlsxData(fName)
+        self.teachers = self.parse_xlsx_data(f_name)
 
         header = ["Αρ.Μητρώου",
                   "Α.Φ.Μ",
@@ -500,15 +502,15 @@ class GUI:
             print(20 * '-', ' Χρηματικά Εντάλματα ', 20 * '-')
             print(reject)
 
-        self.btnGetTeachers.configure(state='disabled')
-        self.teachersFilename.set(fName)
+        self.btn_get_teachers.configure(state='disabled')
+        self.teachers_filename.set(f_name)
 
-        self.cbEndContractDate['values'] = self.create_ecd_list()
-        self.cbEndContractDate.configure(state='readonly')
+        self.cb_end_contract_date['values'] = self.create_ecd_list()
+        self.cb_end_contract_date.configure(state='readonly')
 
-        self.btnRun.configure(state='normal')
+        self.btn_run.configure(state='normal')
 
-    def parseXlsxData(self, file):
+    def parse_xlsx_data(self, file):
         workbook = load_workbook(filename=file)
         sheet = workbook.active
 
@@ -528,7 +530,7 @@ class GUI:
 
         return data
 
-    def saveFile(self, data, outputFile):
+    def save_file(self, data, output_file):
         wb = Workbook()
         ws = wb.active
 
@@ -546,16 +548,16 @@ class GUI:
         for i, column_width in enumerate(column_widths):
             ws.column_dimensions[get_column_letter(i + 1)].width = column_width * 1.23
 
-        notSaved = True
+        not_saved = True
 
-        while notSaved:
+        while not_saved:
             try:
-                wb.save(outputFile)
+                wb.save(output_file)
             except:
                 showwarning(title="Αρχείο σε χρήση...",
-                            message=f"Παρακαλώ κλείστε το αρχείο '{outputFile}' ώστε να ολοκληρωθεί η αποθήκευση.")
+                            message=f"Παρακαλώ κλείστε το αρχείο '{output_file}' ώστε να ολοκληρωθεί η αποθήκευση.")
             else:
-                notSaved = False
+                not_saved = False
 
     def calc_children(self, fb):
         if fb == 0:
@@ -569,12 +571,12 @@ class GUI:
             return children
 
     def create_export_data(self):
-        if self.cbEndContractDate.current() == -1:
-            self.cursor.execute(f"SELECT DISTINCT * FROM teachers, payroll, apd "
+        if self.cb_end_contract_date.current() == -1:
+            self.cursor.execute(f"SELECT * FROM teachers, payroll, apd "
                                 f"WHERE apd.afm = payroll.afm AND apd.afm = teachers.afm")
         else:
-            ecd = self.endContractDate.get()
-            self.cursor.execute(f"SELECT DISTINCT * FROM teachers, payroll, apd "
+            ecd = self.end_contract_date.get()
+            self.cursor.execute(f"SELECT * FROM teachers, payroll, apd "
                                 f"WHERE apd.afm = payroll.afm AND apd.afm = teachers.afm AND "
                                 f"teachers.end_date = '{ecd}'")
 
@@ -595,8 +597,20 @@ class GUI:
             father_name = item[3]
             mother_name = item[4]
             gender = item[5]
+            if gender == 'Άντρας':
+                gender = 'ΑΝΤΡΑΣ'
+            else:
+                gender = 'ΓΥΝΑΙΚΑ'
+
             birthday = item[6]
             family_status = item[7]
+            if family_status == 'Έγγαμος':
+                family_status = 'ΕΓΓΑΜΟΣ'
+            elif family_status == 'Άγαμος':
+                family_status = 'ΑΓΑΜΟΣ'
+            else:
+                family_status = 'ΔΙΑΖΕΥΓΜΕΝΟΣ'
+
             amka = item[8]
             gov_id = item[9]
             specialty = item[10]
@@ -608,6 +622,11 @@ class GUI:
             children = self.calc_children(family_bonus)
             education = 'ΑΕΙ'
             work_type = item[13]
+            if work_type == 'Αναπληρωτές':
+                work_type = 'ΠΛΗΡΗΣ'
+            else:
+                work_type = 'ΜΕΡΙΚΗ'
+
             typical_end_date = end_date
 
             salary = basic_salary + family_bonus
@@ -616,18 +635,19 @@ class GUI:
                      amka, gov_id, specialty, specialty_code, start_date, end_date, f"{salary:.2f}".replace(".", ","),
                      education, work_type, typical_end_date]
 
-            data.append(entry)
+            if entry not in data:
+                data.append(entry)
 
         return data
 
     def run(self):
-        self.btnRun.configure(state='disabled')
+        self.btn_run.configure(state='disabled')
 
-        outputFile = "ergani.xlsx"
+        output_file = "ergani.xlsx"
 
         data = self.create_export_data()
 
-        self.saveFile(data, outputFile)
+        self.save_file(data, output_file)
 
         showinfo(title='Ολοκλήρωση Εκτέλεσης',
                  message=f'Η δημιουργία του αρχείου xlsx ολοκληρώθηκε.')
@@ -673,55 +693,58 @@ class GUI:
                             )""")
 
     def create_widgets(self):
-        self.fData = Frame(self.window)
+        self.f_data = Frame(self.window)
 
-        self.lAPD = Label(self.fData, text="ΑΠΔ (xlsx):")
-        self.lAPD.grid(column=0, row=0, padx=10, pady=10, sticky=E)
+        self.l_apd = Label(self.f_data, text="ΑΠΔ (xlsx):")
+        self.l_apd.grid(column=0, row=0, padx=10, pady=10, sticky=E)
 
-        self.apdFilename = StringVar()
-        self.apdFilename.set('')
-        self.ntrAPDFilename = Entry(self.fData, width=128, state='readonly', textvariable=self.apdFilename)
-        self.ntrAPDFilename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
+        self.apd_filename = StringVar()
+        self.apd_filename.set('')
+        self.ntr_apd_filename = Entry(self.f_data, width=128, state='readonly', textvariable=self.apd_filename)
+        self.ntr_apd_filename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
 
-        self.btnGetAPD = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getAPD)
-        self.btnGetAPD.grid(column=2, row=0, padx=10, pady=10)
+        self.btn_get_apd = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_apd)
+        self.btn_get_apd.grid(column=2, row=0, padx=10, pady=10)
 
-        self.lPayroll = Label(self.fData, text="Μισθολογικά (xlsx):")
-        self.lPayroll.grid(column=0, row=1, padx=10, pady=10, sticky=E)
+        self.l_payroll = Label(self.f_data, text="Μισθολογικά (xlsx):")
+        self.l_payroll.grid(column=0, row=1, padx=10, pady=10, sticky=E)
 
-        self.payrollFilename = StringVar()
-        self.payrollFilename.set('')
-        self.ntrPayrollFilename = Entry(self.fData, width=128, state='readonly', textvariable=self.payrollFilename)
-        self.ntrPayrollFilename.grid(column=1, row=1, padx=10, pady=10, sticky=W)
+        self.payroll_filename = StringVar()
+        self.payroll_filename.set('')
+        self.ntr_payroll_filename = Entry(self.f_data, width=128, state='readonly', textvariable=self.payroll_filename)
+        self.ntr_payroll_filename.grid(column=1, row=1, padx=10, pady=10, sticky=W)
 
-        self.btnGetPayroll = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getPayroll, state='disabled')
-        self.btnGetPayroll.grid(column=2, row=1, padx=10, pady=10)
+        self.btn_get_payroll = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_payroll,
+                                      state='disabled')
+        self.btn_get_payroll.grid(column=2, row=1, padx=10, pady=10)
 
-        self.lTeachers = Label(self.fData, text="Εκπαιδευτικοί (xlsx):")
-        self.lTeachers.grid(column=0, row=2, padx=10, pady=10, sticky=E)
+        self.l_teachers = Label(self.f_data, text="Εκπαιδευτικοί (xlsx):")
+        self.l_teachers.grid(column=0, row=2, padx=10, pady=10, sticky=E)
 
-        self.teachersFilename = StringVar()
-        self.teachersFilename.set('')
-        self.ntrTeachersFilename = Entry(self.fData, width=128, state='readonly', textvariable=self.teachersFilename)
-        self.ntrTeachersFilename.grid(column=1, row=2, padx=10, pady=10, sticky=W)
+        self.teachers_filename = StringVar()
+        self.teachers_filename.set('')
+        self.ntr_teachers_filename = Entry(self.f_data, width=128, state='readonly',
+                                           textvariable=self.teachers_filename)
+        self.ntr_teachers_filename.grid(column=1, row=2, padx=10, pady=10, sticky=W)
 
-        self.btnGetTeachers = Button(self.fData, text="Επιλέξτε αρχείο...", command=self.getTeachers, state='disabled')
-        self.btnGetTeachers.grid(column=2, row=2, padx=10, pady=10)
+        self.btn_get_teachers = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_teachers,
+                                       state='disabled')
+        self.btn_get_teachers.grid(column=2, row=2, padx=10, pady=10)
 
-        self.lEndContractDate = Label(self.fData, text="Ημερομηνία Λήξης Σύμβασης:\n(χωρίς επιλογή για όλες)")
-        self.lEndContractDate.grid(column=0, row=3, padx=10, pady=10, sticky=E)
+        self.l_end_contract_date = Label(self.f_data, text="Ημερομηνία Λήξης Σύμβασης:\n(χωρίς επιλογή για όλες)")
+        self.l_end_contract_date.grid(column=0, row=3, padx=10, pady=10, sticky=E)
 
-        self.endContractDate = StringVar()
-        self.cbEndContractDate = Combobox(self.fData, width=125, textvariable=self.endContractDate,
-                                          state='disabled')
-        self.cbEndContractDate.grid(column=1, row=3, padx=10, pady=10)
+        self.end_contract_date = StringVar()
+        self.cb_end_contract_date = Combobox(self.f_data, width=125, textvariable=self.end_contract_date,
+                                             state='disabled')
+        self.cb_end_contract_date.grid(column=1, row=3, padx=10, pady=10)
 
-        self.btnRun = Button(self.fData, text="Εκτέλεση", command=self.run, state='disabled')
-        self.btnRun.grid(column=1, row=10, padx=10, pady=10)
+        self.btn_run = Button(self.f_data, text="Εκτέλεση", command=self.run, state='disabled')
+        self.btn_run.grid(column=1, row=10, padx=10, pady=10)
 
         self.create_db()
 
-        self.fData.pack()
+        self.f_data.pack()
 
 
 gui = GUI()
