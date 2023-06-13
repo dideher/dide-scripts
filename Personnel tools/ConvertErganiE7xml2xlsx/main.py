@@ -75,6 +75,8 @@ class GUI:
                 elif field == 'f_epipedo_morfosis':
                     if value == '11':
                         value = 'ΑΕΙ'
+                elif field == 'f_apodoxes':
+                    value = value.replace('.', '')
 
                 entry.append(value)
 
