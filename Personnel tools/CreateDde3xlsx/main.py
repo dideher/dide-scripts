@@ -45,31 +45,50 @@ class GUI:
         self.btn_run.configure(state='normal')
 
     def create_xlsx(self):
-        wb = Workbook()
-        ws = wb.active
+        wb_verified = Workbook()
+        ws_verified = wb_verified.active
+        self.not_verified_data = list()
 
         header = self.data[0][:19]
-        ws.append(header)
+        ws_verified.append(header)
 
         for row, entry in enumerate(self.data[1:]):
             out_entry = entry[:19].copy()
 
+            if entry[19] == '':
+                self.not_verified_data.append(out_entry)
+                continue
+
             for i in [1, 2, 3, 4, 6]:
                 # Row + 2 corresponds to excel row
 
-                if i in [1, 2, 3, 4] and entry[i] != entry[i + 24]:
+                if i in [1, 2, 3, 4] and entry[i] != entry[i + 24] and entry[i + 24] != '':
                     print(f'{row + 2}: {entry[i]} <> {entry[i + 24]}')
                     out_entry[i] = entry[i + 24]
-                elif i == 6 and entry[6] != entry[29]:
+                elif i == 6 and entry[6] != entry[29] and entry[29] != '':
                     print(f'{row + 2}: {entry[6]} <> {entry[29]}')
                     out_entry[6] = entry[29]
 
-            ws.append(out_entry)
+            ws_verified.append(out_entry)
 
-        self.set_cols_width(ws)
+        self.set_cols_width(ws_verified)
 
         output_file = "dde3.xlsx"
-        self.safe_save(wb, output_file)
+        self.safe_save(wb_verified, output_file)
+
+        if len(self.not_verified_data) > 0:
+            wb_not_verified = Workbook()
+            ws_not_verified = wb_not_verified.active
+
+            ws_not_verified.append(header)
+
+            for entry in self.not_verified_data:
+                ws_not_verified.append(entry)
+
+            self.set_cols_width(ws_not_verified)
+
+            output_file = "dde3_not_verified.xlsx"
+            self.safe_save(wb_not_verified, output_file)
 
     def set_cols_width(self, ws):
         column_widths = []
@@ -99,6 +118,12 @@ class GUI:
         self.create_xlsx()
         showinfo(title="Ολοκλήρωση εκτέλεσης",
                  message="Η δημιουργία του αρχείου dde3.xlsx για τις απολύσεις στην Εργάνη ολοκληρώθηκε.")
+
+        if len(self.not_verified_data) > 0:
+            showwarning(title="Μη επαληθευμένες εγγραφές",
+                        message=f"Στο αρχείο dde3_not_verified.xlsx εμφανίζονται εκπαιδευτικοί για τους οποίους "
+                                f"δεν υπήρχε αρχείο πρόσληψης.")
+
         self.window.destroy()
 
     def create_widgets(self):
