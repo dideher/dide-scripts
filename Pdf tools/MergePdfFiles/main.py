@@ -58,7 +58,7 @@ class GUI:
                 files_counter += 1
 
                 with fitz.open(file) as mfile:
-                    pdf_out.insertPDF(mfile)
+                    pdf_out.insert_pdf(mfile)
         else:
             for entry in os.scandir(input_dir):
                 if entry.is_file() and entry.name[-4:] == ".pdf":
@@ -67,7 +67,7 @@ class GUI:
                     file = os.path.join(input_dir, entry.name)
 
                     with fitz.open(file) as mfile:
-                        pdf_out.insertPDF(mfile)
+                        pdf_out.insert_pdf(mfile)
 
         if files_counter == 0:
             showwarning(title="Αποτυχία εκτέλεσης", message="Δεν υπήρχαν αρχεία για συνένωση.")

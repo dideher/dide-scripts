@@ -74,7 +74,7 @@ class GUI():
 
         self.inputDir = StringVar()
         self.inputDir.set('')
-        self.ntrInputDir = Entry(self.fData, width=128, textvariable=self.inputDir)
+        self.ntrInputDir = Entry(self.fData, width=128, state='readonly', textvariable=self.inputDir)
         self.ntrInputDir.grid(column=1, row=1, padx=10, pady=10, sticky=W)
 
         self.btnOpenInputDir = Button(self.fData, text="Επιλέξτε φάκελο...", command=self.getInputDir)
