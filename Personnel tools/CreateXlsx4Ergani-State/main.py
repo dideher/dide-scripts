@@ -4,6 +4,7 @@ from tkinter.messagebox import showwarning, showinfo
 from tkinter.ttk import *
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
+from datetime import date
 import sqlite3
 
 
@@ -19,81 +20,20 @@ class GUI:
         self.cursor.execute("SELECT DISTINCT end_date FROM teachers")
         q = self.cursor.fetchall()
 
-        ecd_list = list()
+        ecd_temp_list = list()
         for item in q:
-            ecd_list.append(item[0])
+            day, month, year = item[0].split('/')
+            if year == str(date.today().year):
+                ecd_temp_list.append(f'{year}/{month}/{day}')
 
-        ecd_list.sort()
+        ecd_temp_list.sort(reverse=True)
+
+        ecd_list = list()
+        for item in ecd_temp_list:
+            year, month, day = item.split('/')
+            ecd_list.append(f'{day}/{month}/{year}')
 
         return ecd_list
-
-    def get_apd(self):
-        f_name = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
-                                            filetypes=(("xlsx files", "*.xlsx"), ("all files", "*.*")))
-
-        if f_name == "":
-            return
-
-        self.apd = self.parse_xlsx_data(f_name)
-
-        header = [
-            "Τύπος Εγγραφής",
-            "Αριθμός Μητρώου Ασφαλισμένου",
-            "Α.Μ.Κ.Α.",
-            "Επώνυμο Ασφαλισμένου",
-            "Όνομα Ασφαλισμένου",
-            "Όνομα Πατρός Ασφαλισμένου",
-            "Όνομα Μητρός Ασφαλισμένου",
-            "Ημερομηνία Γέννησης",
-            "Α.Φ.Μ.",
-            "Τύπος Εγγραφής",
-            "Αριθμός Παραρτήματος",
-            "Κ.Α.Δ.",
-            "Πλήρες Ωράριο",
-            "Όλες εργάσιμες",
-            "Κυριακές",
-            "Κωδικός Ειδικότητας",
-            "Ειδικές περιπτώσεις ασφάλισης",
-            "Πακέτο Κάλυψης",
-            "Μισθολογική περίοδος - μήνας",
-            "Μισθολογική περίοδος - έτος",
-            "Από Ημερομηνία απασχόλησης",
-            "Έως Ημερομηνία απασχόλησης",
-            "Τύπος αποδοχών",
-            "Ημέρες Ασφάλισης",
-            "Ημερομίσθιο",
-            "Αποδοχές",
-            "Εισφορές Ασφαλισμένου",
-            "Εισφορές Εργοδότη",
-            "Συνολικές Εισφορές",
-            "Επιδότηση ασφαλισμένου (ποσό)",
-            "Επιδότηση εργοδότη (%)",
-            "Επιδότηση εργοδότη (ποσό)",
-            "Καταβλητέες εισφορές"
-        ]
-
-        if self.apd[0] != header:
-            cols = ''
-            for item in header:
-                cols += f"- {item}\n"
-            showwarning(title="Λάθος τύπος αρχείου...",
-                        message=f"Το αρχείο πρέπει να έχει τις εξής στήλες:\n{cols}")
-
-            return
-
-        for item in self.apd[1:]:
-            afm = item[8]
-            specialty_code = item[15]
-            type_of_payment = item[22]
-
-            if type_of_payment == '001':
-                self.cursor.execute(f"INSERT INTO apd VALUES ('{afm}', '{specialty_code}')")
-                self.conn.commit()
-
-        self.btn_get_apd.configure(state='disabled')
-        self.apd_filename.set(f_name)
-
-        self.btn_get_payroll.configure(state='normal')
 
     def get_payroll(self):
         f_name = filedialog.askopenfilename(initialdir="./data", title="Επιλέξτε το αρχείο xlsx",
@@ -576,12 +516,12 @@ class GUI:
 
     def create_export_data(self):
         if self.cb_end_contract_date.current() == -1:
-            self.cursor.execute(f"SELECT * FROM teachers, payroll, apd "
-                                f"WHERE apd.afm = payroll.afm AND apd.afm = teachers.afm")
+            self.cursor.execute(f"SELECT * FROM teachers, payroll "
+                                f"WHERE payroll.afm = teachers.afm")
         else:
             ecd = self.end_contract_date.get()
-            self.cursor.execute(f"SELECT * FROM teachers, payroll, apd "
-                                f"WHERE apd.afm = payroll.afm AND apd.afm = teachers.afm AND "
+            self.cursor.execute(f"SELECT * FROM teachers, payroll "
+                                f"WHERE payroll.afm = teachers.afm AND "
                                 f"teachers.end_date = '{ecd}'")
 
         q = self.cursor.fetchall()
@@ -595,11 +535,14 @@ class GUI:
         data.append(header)
 
         for item in q:
+            specialty_code = '24'
+
             afm = item[0]
             last_name = item[1]
             first_name = item[2]
             father_name = item[3]
             mother_name = item[4]
+
             gender = item[5]
             if gender == 'Άντρας':
                 gender = 'ΑΝΤΡΑΣ'
@@ -607,6 +550,7 @@ class GUI:
                 gender = 'ΓΥΝΑΙΚΑ'
 
             birthday = item[6]
+
             family_status = item[7]
             if family_status == 'Έγγαμος':
                 family_status = 'ΕΓΓΑΜΟΣ'
@@ -618,13 +562,13 @@ class GUI:
             amka = item[8]
             gov_id = item[9]
             specialty = item[10]
-            specialty_code = item[18]
             start_date = item[11]
             end_date = item[12]
             basic_salary = item[15]
             family_bonus = item[16]
             children = self.calc_children(family_bonus)
             education = 'ΑΕΙ'
+
             work_type = item[13]
             if work_type == 'Αναπληρωτές':
                 work_type = 'ΠΛΗΡΗΣ'
@@ -656,6 +600,8 @@ class GUI:
         showinfo(title='Ολοκλήρωση Εκτέλεσης',
                  message=f'Η δημιουργία του αρχείου xlsx ολοκληρώθηκε.')
 
+        self.window.destroy()
+
     def create_db(self):
         self.conn = sqlite3.connect('ergani.db')
         self.cursor = self.conn.cursor()
@@ -664,14 +610,9 @@ class GUI:
         tables = self.cursor.fetchall()
 
         for tbl in tables:
-            if tbl[0] in ['apd', 'payroll', 'teachers']:
+            if tbl[0] in ['payroll', 'teachers']:
                 self.cursor.execute(f"DROP TABLE {tbl[0]}")
         self.conn.commit()
-
-        self.cursor.execute("""CREATE TABLE apd (
-                                afm text,
-                                specialty_code text
-                            )""")
 
         self.cursor.execute("""CREATE TABLE payroll (
                                 afm text,
@@ -699,49 +640,37 @@ class GUI:
     def create_widgets(self):
         self.f_data = Frame(self.window)
 
-        self.l_apd = Label(self.f_data, text="ΑΠΔ (xlsx):")
-        self.l_apd.grid(column=0, row=0, padx=10, pady=10, sticky=E)
-
-        self.apd_filename = StringVar()
-        self.apd_filename.set('')
-        self.ntr_apd_filename = Entry(self.f_data, width=128, state='readonly', textvariable=self.apd_filename)
-        self.ntr_apd_filename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
-
-        self.btn_get_apd = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_apd)
-        self.btn_get_apd.grid(column=2, row=0, padx=10, pady=10)
-
         self.l_payroll = Label(self.f_data, text="Μισθολογικά (xlsx):")
-        self.l_payroll.grid(column=0, row=1, padx=10, pady=10, sticky=E)
+        self.l_payroll.grid(column=0, row=0, padx=10, pady=10, sticky=E)
 
         self.payroll_filename = StringVar()
         self.payroll_filename.set('')
         self.ntr_payroll_filename = Entry(self.f_data, width=128, state='readonly', textvariable=self.payroll_filename)
-        self.ntr_payroll_filename.grid(column=1, row=1, padx=10, pady=10, sticky=W)
+        self.ntr_payroll_filename.grid(column=1, row=0, padx=10, pady=10, sticky=W)
 
-        self.btn_get_payroll = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_payroll,
-                                      state='disabled')
-        self.btn_get_payroll.grid(column=2, row=1, padx=10, pady=10)
+        self.btn_get_payroll = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_payroll, state='normal')
+        self.btn_get_payroll.grid(column=2, row=0, padx=10, pady=10)
 
         self.l_teachers = Label(self.f_data, text="Εκπαιδευτικοί (xlsx):")
-        self.l_teachers.grid(column=0, row=2, padx=10, pady=10, sticky=E)
+        self.l_teachers.grid(column=0, row=1, padx=10, pady=10, sticky=E)
 
         self.teachers_filename = StringVar()
         self.teachers_filename.set('')
         self.ntr_teachers_filename = Entry(self.f_data, width=128, state='readonly',
                                            textvariable=self.teachers_filename)
-        self.ntr_teachers_filename.grid(column=1, row=2, padx=10, pady=10, sticky=W)
+        self.ntr_teachers_filename.grid(column=1, row=1, padx=10, pady=10, sticky=W)
 
         self.btn_get_teachers = Button(self.f_data, text="Επιλέξτε αρχείο...", command=self.get_teachers,
                                        state='disabled')
-        self.btn_get_teachers.grid(column=2, row=2, padx=10, pady=10)
+        self.btn_get_teachers.grid(column=2, row=1, padx=10, pady=10)
 
         self.l_end_contract_date = Label(self.f_data, text="Ημερομηνία Λήξης Σύμβασης:\n(χωρίς επιλογή για όλες)")
-        self.l_end_contract_date.grid(column=0, row=3, padx=10, pady=10, sticky=E)
+        self.l_end_contract_date.grid(column=0, row=2, padx=10, pady=10, sticky=E)
 
         self.end_contract_date = StringVar()
         self.cb_end_contract_date = Combobox(self.f_data, width=125, textvariable=self.end_contract_date,
                                              state='disabled')
-        self.cb_end_contract_date.grid(column=1, row=3, padx=10, pady=10)
+        self.cb_end_contract_date.grid(column=1, row=2, padx=10, pady=10)
 
         self.btn_run = Button(self.f_data, text="Εκτέλεση", command=self.run, state='disabled')
         self.btn_run.grid(column=1, row=10, padx=10, pady=10)
