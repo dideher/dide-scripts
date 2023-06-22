@@ -47,30 +47,68 @@ class GUI:
     def create_xlsx(self):
         wb = Workbook()
         ws = wb.active
+        wb_ok = Workbook()
+        ws_ok = wb_ok.active
+        wb_to_check = Workbook()
+        ws_to_check = wb_to_check.active
+        wb_manual = Workbook()
+        ws_manual = wb_manual.active
 
         header = self.data[0][:19]
         ws.append(header)
+        ws_ok.append(header)
+        ws_to_check.append(header)
+        ws_manual.append(header)
 
         for row, entry in enumerate(self.data[1:]):
+            if entry[19] == '':
+                out_entry = entry[:19].copy()
+                ws_manual.append(out_entry)
+                continue
+
             out_entry = entry[19:].copy()
 
+            found_difference = False
+            error = ''
             for i in [8, 15]:
                 if entry[i] != entry[i + 19]:
+                    found_difference = True
 
                     # Row + 2 corresponds to excel row
 
-                    if i == 8 and entry[i] < entry[i + 19]:
-                        print(f'{row + 2}: {entry[i]} <> {entry[i + 19]}')
-                    elif i == 15 and float(entry[i].replace(',', '.')) < float(entry[i + 19].replace(',', '.')):
-                        print(f'{row + 2}: {entry[i]} <> {entry[i + 19]}')
+                    if i == 8:
+                        error += f'{entry[i]} <> {entry[i + 19]}'
+                    elif i == 15:
+                        if error != '':
+                            error += ', '
+                        error += f'{entry[i]} <> {entry[i + 19]}'
+
                     out_entry[i] = entry[i]
+
+            if found_difference:
+                print(f'Row [{row}]: {entry[0:3]} [{error}]')
+                ws_to_check.append(entry)
+            else:
+                ws_ok.append(out_entry)
 
             ws.append(out_entry)
 
         self.set_cols_width(ws)
+        self.set_cols_width(ws_ok)
+        self.set_cols_width(ws_to_check)
+        self.set_cols_width(ws_manual)
 
         output_file = "dde2.xlsx"
         self.safe_save(wb, output_file)
+
+        output_file = "dde2_ok.xlsx"
+        self.safe_save(wb_ok, output_file)
+
+        output_file = "dde2_to_check.xlsx"
+        self.safe_save(wb_to_check, output_file)
+
+        output_file = "dde2_manual.xlsx"
+        self.safe_save(wb_manual, output_file)
 
     def set_cols_width(self, ws):
         column_widths = []
