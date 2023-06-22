@@ -102,6 +102,10 @@ class GUI:
             else:
                 salary = xlsx_salary + ',00'
 
+            int_part, dec_part = salary.split(',')
+            if len(int_part) > 3:
+                salary = f'{int_part[0]}.{int_part[1:]},{dec_part}'
+
             epipedo_morfosis = entry[16]
             if epipedo_morfosis == 'ΑΕΙ':
                 epipedo_morfosis = '11'
