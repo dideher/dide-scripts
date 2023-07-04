@@ -97,6 +97,8 @@ class GUI:
             end_date = entry[14]
 
             xlsx_salary = entry[15]
+            xlsx_salary = xlsx_salary.replace('.', ',')
+
             if ',' in xlsx_salary:
                 salary = xlsx_salary
             else:

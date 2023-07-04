@@ -514,6 +514,30 @@ class GUI:
             children = int((fb - 70) / 50) + 2
             return children
 
+    def is_part_time(self, specialty, basic_salary):
+        pe_mk = ['1092.0', '1151.0', '1210.0', '1269.0', '1328.0', '1387.0', '1446.0', '1505.0', '1564.0',
+                 '1623.0', '1682.0', '1741.0', '1800.0', '1859.0', '1918.0', '1977.0', '2036.0', '2095.0',
+                 '2154.0']
+
+        te_mk = ['1037.0', '1092.0', '1147.0', '1202.0', '1257.0', '1312.0', '1367.0', '1422.0', '1477.0',
+                 '1532.0', '1587.0', '1642.0', '1697.0', '1752.0', '1807.0', '1862.0', '1917.0', '1972.0',
+                 '2027.0']
+
+        de_mk = ['858.0', '918.0', '978.0', '1038.0', '1098.0', '1158.0', '1218.0', '1278.0', '1338.0',
+                 '1398.0', '1458.0', '1518.0', '1578.0']
+
+        if specialty.startswith('ΠΕ'):
+            mk = pe_mk
+        elif specialty.startswith('ΤΕ'):
+            mk = te_mk
+        else:
+            mk = de_mk
+
+        if str(basic_salary) in mk:
+            return False
+
+        return True
+
     def create_export_data(self):
         if self.cb_end_contract_date.current() == -1:
             self.cursor.execute(f"SELECT * FROM teachers, payroll "
@@ -569,8 +593,8 @@ class GUI:
             children = self.calc_children(family_bonus)
             education = 'ΑΕΙ'
 
-            work_type = item[13]
-            if work_type == 'Αναπληρωτές':
+            # work_type = item[13]
+            if not self.is_part_time(specialty, basic_salary):
                 work_type = 'ΠΛΗΡΗΣ'
             else:
                 work_type = 'ΜΕΡΙΚΗ'
